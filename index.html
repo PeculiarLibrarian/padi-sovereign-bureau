@@ -202,13 +202,11 @@
 </head>
 <body>
 
-<!-- LOADING -->
 <div id="loading">
   <div class="loader-ring"></div>
   <p id="loading-msg">CONNECTING TO PADI ENGINE...</p>
 </div>
 
-<!-- HEADER -->
 <header class="brand-header">
   <div>
     <div class="padi-id">PADI SOVEREIGN BUREAU</div>
@@ -226,7 +224,6 @@
   </div>
 </header>
 
-<!-- ADD VOICE (only shown when server live) -->
 <div class="add-panel" id="add-panel" style="display:none;">
   <button class="add-toggle" onclick="toggleForm()">+ ADD VOICE</button>
   <div class="add-form" id="add-form">
@@ -254,13 +251,10 @@
   </div>
 </div>
 
-<!-- LEGEND -->
 <div class="legend" id="legend"></div>
 
-<!-- SVG canvas -->
 <svg id="viz"></svg>
 
-<!-- NODE DETAIL -->
 <div class="node-detail-panel" id="detail" style="display:none;">
   <button class="close-btn" onclick="closeDetail()">×</button>
   <span class="cat-tag" id="d-cat"></span>
@@ -273,8 +267,8 @@
 // ─────────────────────────────────────────────
 // CONFIG
 // ─────────────────────────────────────────────
-const SERVER = 'http://localhost:8080';
-const WS_URL = 'ws://localhost:8080';
+const SERVER = 'https://padi-sovereign-bureau.onrender.com';
+const WS_URL = 'wss://padi-sovereign-bureau.onrender.com';
 
 const CATEGORY_COLORS = {
   'Computing':   '#a855f7',
@@ -288,7 +282,7 @@ const CATEGORY_COLORS = {
 
 // Static fallback data (used when server is offline)
 const FALLBACK_NODES = [
-  { id:'padi-01', name:'Knowledge Protocol',  category:'Meta',        bio:'Semantic logic bridging diverse knowledge nodes.' },
+  { id:'padi-01', name:'Knowledge Protocol',  category:'Meta',         bio:'Semantic logic bridging diverse knowledge nodes.' },
   { id:'h-01',    name:'Ada Lovelace',         category:'Computing',   bio:'Mathematician and first computer programmer (1843).' },
   { id:'h-02',    name:'Katherine Johnson',    category:'Mathematics', bio:'NASA lead for orbital mechanics and trajectory calculation.' },
   { id:'h-03',    name:'Hedy Lamarr',          category:'Systems',     bio:'Inventor of frequency-hopping spread spectrum technology.' },
@@ -321,7 +315,7 @@ let links        = [];
 let influenceMap = {};
 let serverLive   = false;
 let simulation   = null;
-let ws           = null;
+let ws             = null;
 
 // D3 selections (reused on re-render)
 let svgSel, containerSel, linkSel, nodeGroupSel;
