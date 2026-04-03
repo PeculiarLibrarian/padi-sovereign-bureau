@@ -16,6 +16,7 @@
       --muted:   #94a3b8;
       --accent:  #3b82f6;
       --meta:    'JetBrains Mono', monospace;
+      --border:  rgba(255,255,255,0.08);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body, html {
@@ -50,85 +51,71 @@
     /* --- HEADER --- */
     .brand-header {
       position: absolute; top: 0; width: 100%;
-      padding: 2rem; z-index: 20;
+      padding: 1.5rem; z-index: 20;
       display: flex; justify-content: space-between; align-items: flex-start;
       background: linear-gradient(to bottom, rgba(2,6,23,0.95) 70%, transparent);
       pointer-events: none;
     }
     .padi-id { font-family: var(--meta); font-size: 0.6rem; color: var(--accent); letter-spacing: 1px; font-weight: 700; }
-    h1 { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.5px; margin-top: 2px; }
-    .tagline { font-size: 0.8rem; opacity: 0.7; max-width: 450px; line-height: 1.5; margin-top: 6px; }
+    h1 { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.5px; margin-top: 2px; }
+    .tagline { font-size: 0.7rem; opacity: 0.7; max-width: 400px; line-height: 1.4; margin-top: 4px; }
     
-    .status-bar { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; pointer-events: auto; }
+    .status-bar { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; pointer-events: auto; }
     .status-pill {
-      font-family: var(--meta); font-size: 0.6rem; font-weight: 700;
-      display: flex; align-items: center; gap: 7px;
-      padding: 5px 12px; border-radius: 20px;
+      font-family: var(--meta); font-size: 0.55rem; font-weight: 700;
+      display: flex; align-items: center; gap: 6px;
+      padding: 4px 10px; border-radius: 20px;
       border: 1px solid var(--border);
       background: var(--bg2);
     }
-    .dot { width: 8px; height: 8px; border-radius: 50%; background: #10b981; box-shadow: 0 0 10px #10b981; }
-    .dot.warn { background: #f59e0b; box-shadow: 0 0 10px #f59e0b; }
-    .dot.error { background: #ef4444; box-shadow: 0 0 10px #ef4444; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: #10b981; box-shadow: 0 0 8px #10b981; }
+    .dot.warn { background: #f59e0b; box-shadow: 0 0 8px #f59e0b; }
 
     /* --- ADD VOICE PANEL --- */
-    .add-panel { position: absolute; top: 120px; right: 2rem; z-index: 20; width: 260px; }
+    .add-panel { position: absolute; top: 100px; right: 1.5rem; z-index: 20; width: 220px; }
     .add-toggle {
-      font-family: var(--meta); font-size: 0.7rem; font-weight: 700;
+      font-family: var(--meta); font-size: 0.65rem; font-weight: 700;
       background: var(--bg2); border: 1px solid var(--border);
-      color: var(--accent); padding: 10px; border-radius: 10px;
+      color: var(--accent); padding: 8px; border-radius: 8px;
       cursor: pointer; width: 100%; text-align: center;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.2s;
     }
-    .add-toggle:hover { background: var(--bg3); border-color: var(--accent); transform: translateY(-1px); }
-    
     .add-form {
       display: none; margin-top: 10px; background: rgba(15,23,42,0.98);
       backdrop-filter: blur(8px);
-      border: 1px solid var(--border); border-radius: 14px; padding: 18px;
-      flex-direction: column; gap: 12px;
-      box-shadow: 0 30px 60px -10px rgba(0,0,0,0.8);
+      border: 1px solid var(--border); border-radius: 12px; padding: 15px;
+      flex-direction: column; gap: 10px;
+      box-shadow: 0 20px 40px -10px rgba(0,0,0,0.8);
     }
-    .add-form.open { display: flex; animation: slideDown 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
-    @keyframes slideDown { from { transform: translateY(-10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-    
+    .add-form.open { display: flex; }
     .add-form input, .add-form select {
       background: var(--bg3); border: 1px solid var(--border);
-      color: white; padding: 10px; border-radius: 8px; font-size: 13px; width: 100%;
-      font-family: 'Inter', sans-serif;
+      color: white; padding: 8px; border-radius: 6px; font-size: 12px; width: 100%;
     }
-    .add-form label { font-family: var(--meta); font-size: 9px; color: var(--muted); text-transform: uppercase; margin-bottom: 2px; }
     .submit-btn {
-      background: var(--accent); color: white; border: none; padding: 12px;
-      border-radius: 8px; font-weight: 700; cursor: pointer;
-      font-family: var(--meta); font-size: 11px; letter-spacing: 0.5px;
-      transition: background 0.15s;
+      background: var(--accent); color: white; border: none; padding: 10px;
+      border-radius: 6px; font-weight: 700; cursor: pointer;
+      font-family: var(--meta); font-size: 10px;
     }
-    .submit-btn:hover { background: #2563eb; }
 
-    /* --- VIZ / SVG --- */
+    /* --- VIZ --- */
     svg { width: 100%; height: 100%; cursor: grab; display: block; }
     svg:active { cursor: grabbing; }
-    .link { stroke-opacity: 0.15; stroke-width: 1.2px; transition: stroke-opacity 0.3s; }
-    .node-circle { stroke-width: 2.5px; transition: r 0.3s, filter 0.3s, stroke-opacity 0.3s; cursor: pointer; }
-    
-    /* SHATTERED CEILING METAPHOR */
-    .node-circle.illuminated { filter: drop-shadow(0 0 10px rgba(255,255,255,0.4)); }
-    .node-circle.shadow { stroke-dasharray: 2,2; opacity: 0.65; filter: grayscale(40%); }
-    
-    .node-label { font-family: var(--meta); font-size: 9px; fill: var(--muted); pointer-events: none; text-transform: uppercase; }
+    .link { stroke-opacity: 0.15; stroke-width: 1px; }
+    .node-circle { stroke-width: 2px; transition: r 0.3s, filter 0.3s; cursor: pointer; }
+    .node-circle.illuminated { filter: drop-shadow(0 0 12px rgba(255,255,255,0.4)); }
+    .node-circle.shadow { stroke-dasharray: 2,2; opacity: 0.6; }
+    .node-label { font-family: var(--meta); font-size: 8px; fill: var(--muted); pointer-events: none; text-transform: uppercase; }
 
-    /* --- TOOLTIP / DETAIL --- */
+    /* --- DETAIL PANEL --- */
     .node-detail-panel {
-      position: absolute; bottom: 2rem; right: 2rem; width: 360px;
+      position: absolute; bottom: 1.5rem; left: 1.5rem; width: 320px;
       background: rgba(15,23,42,0.96); backdrop-filter: blur(20px);
-      border: 1px solid var(--border); border-radius: 18px; padding: 25px;
-      z-index: 30; box-shadow: 0 35px 70px -15px rgba(0,0,0,0.8);
-      animation: slideLeft 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+      border: 1px solid var(--border); border-radius: 16px; padding: 20px;
+      z-index: 30; box-shadow: 0 20px 50px rgba(0,0,0,0.7);
     }
-    @keyframes slideLeft { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-    .cat-tag { font-family: var(--meta); font-size: 10px; font-weight: 800; padding: 3px 10px; border-radius: 5px; color: white; letter-spacing: 0.5px; }
-    .close-btn { float: right; background: none; border: none; color: var(--muted); cursor: pointer; font-size: 18px; margin-top: -5px; }
+    .cat-tag { font-family: var(--meta); font-size: 9px; font-weight: 800; padding: 2px 8px; border-radius: 4px; color: white; }
+    .close-btn { float: right; background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; }
   </style>
 </head>
 <body>
@@ -140,39 +127,27 @@
 
 <header class="brand-header">
   <div>
-    <div class="padi-id">WECODED 2026 CHALLENGE // PADI BUREAU</div>
+    <div class="padi-id">WECODED 2026 // PADI BUREAU</div>
     <h1>The Living Library // Shattered Ceilings</h1>
-    <p class="tagline">An interactive knowledge protocol visualizing the intricate architecture of technological equity and marginalized contributions.</p>
+    <p class="tagline">Visualizing the hidden architecture of technological equity.</p>
   </div>
   <div class="status-bar">
-    <div class="status-pill">
-      <div class="dot" id="status-dot"></div>
-      <span id="status-label">OFFLINE</span>
-    </div>
+    <div class="status-pill"><div class="dot" id="status-dot"></div><span id="status-label">OFFLINE</span></div>
     <div class="status-pill"><span id="node-count">0 NODES</span></div>
   </div>
 </header>
 
 <div class="add-panel">
-  <button class="add-toggle" onclick="toggleForm()">+ CONTRIBUTE VOICES</button>
+  <button class="add-toggle" onclick="toggleForm()">+ CONTRIBUTE VOICE</button>
   <div class="add-form" id="add-form">
-    <div>
-      <label>Full Name</label>
-      <input id="f-name" type="text" placeholder="Ada Lovelace">
-    </div>
-    <div>
-      <label>Category</label>
-      <select id="f-category">
-        <option>Computing</option><option>Mathematics</option><option>Systems</option>
-        <option>AI Ethics</option><option>Justice</option>
-      </select>
-    </div>
-    <div>
-      <label>Contribution (One Line)</label>
-      <input id="f-bio" type="text" placeholder="Key achievement">
-    </div>
+    <input id="f-name" type="text" placeholder="Full Name">
+    <select id="f-category">
+      <option>Computing</option><option>Mathematics</option><option>Systems</option>
+      <option>AI Ethics</option><option>Justice</option>
+    </select>
+    <input id="f-bio" type="text" placeholder="Key contribution">
     <button class="submit-btn" onclick="submitVoice()">SUBMIT VOICE</button>
-    <p id="form-status" style="font-size:10px; text-align:center; margin-top:5px; font-family:var(--meta); color:var(--muted)"></p>
+    <p id="form-status" style="font-size:9px; text-align:center; margin-top:5px; font-family:var(--meta); color:var(--muted)"></p>
   </div>
 </div>
 
@@ -181,97 +156,65 @@
 <div class="node-detail-panel" id="detail" style="display:none;">
   <button class="close-btn" onclick="closeDetail()">×</button>
   <span class="cat-tag" id="d-cat"></span>
-  <h2 id="d-name" style="margin-top:12px; font-weight:700;"></h2>
-  <p id="d-bio" style="margin-top:10px; font-size:15px; opacity:0.85; line-height:1.5; font-weight:300;"></p>
-  <div id="d-meta" style="margin-top:18px; font-family:var(--meta); font-size:10px; color:var(--accent); border-top:1px solid rgba(255,255,255,0.07); padding-top:10px;"></div>
+  <h2 id="d-name" style="margin-top:10px; font-size: 1.1rem;"></h2>
+  <p id="d-bio" style="margin-top:8px; font-size:13px; opacity:0.8; line-height:1.4;"></p>
+  <div id="d-meta" style="margin-top:15px; font-family:var(--meta); font-size:9px; color:var(--accent); border-top:1px solid var(--border); padding-top:10px;"></div>
 </div>
 
 <script>
-  // --- PRODUCTION CONFIG ---
-  // Smart logic for both local development and Render deployment
   const isLocal = window.location.hostname === 'localhost';
   const SERVER = isLocal ? 'http://localhost:8080' : window.location.origin;
   const WS_URL = window.location.protocol === 'https:' ? `wss://${window.location.host}` : `ws://${window.location.host}`;
-
   const COLORS = { 'Computing':'#a855f7', 'Mathematics':'#ec4899', 'Systems':'#3b82f6', 'AI Ethics':'#10b981', 'Justice':'#f59e0b', 'Medicine':'#ef4444' };
 
-  // --- THE COMPLETE LIVING LIBRARY: 42 OUTSTANDING VOICES ---
   const SEED = [
-    // --- HISTORICAL SHADOWS (Shattered Barriers) ---
-    { id:'h1', name:'Ada Lovelace', category:'Computing', bio:'Visionary who wrote the first algorithm for a machine (1843).', status:'shadow' },
-    { id:'h2', name:'Katherine Johnson', category:'Mathematics', bio:'NASA mathematician who calculated Apollo 11 moon landing trajectories.', status:'shadow' },
-    { id:'h3', name:'Gladys West', category:'Mathematics', bio:'Mathematical architect of Global Positioning Systems (GPS).', status:'shadow' },
+    { id:'h1', name:'Ada Lovelace', category:'Computing', bio:'Wrote the first algorithm for a machine (1843).', status:'shadow' },
+    { id:'h2', name:'Katherine Johnson', category:'Mathematics', bio:'NASA mathematician who calculated Apollo 11 trajectories.', status:'shadow' },
+    { id:'h3', name:'Gladys West', category:'Mathematics', bio:'Mathematical architect of GPS technology.', status:'shadow' },
     { id:'h4', name:'Hedy Lamarr', category:'Systems', bio:'Co-inventor of frequency-hopping technology (Wi-Fi).', status:'shadow' },
-    { id:'h5', name:'Radia Perlman', category:'Systems', bio:'Pioneer of STP, fundamental to the Internet’s stability.', status:'shadow' },
-    { id:'h6', name:'Margaret Hamilton', category:'Computing', bio:'Lead software designer for Apollo; coined "software engineering".', status:'shadow' },
+    { id:'h5', name:'Radia Perlman', category:'Systems', bio:'Inventor of Spanning Tree Protocol, vital for the internet.', status:'shadow' },
+    { id:'h6', name:'Margaret Hamilton', category:'Computing', bio:'Lead Apollo software engineer; coined "software engineering".', status:'shadow' },
     { id:'h7', name:'Dorothy Vaughan', category:'Computing', bio:'NASA’s first Black supervisor; FORTRAN expert.', status:'shadow' },
-    { id:'h8', name:'Mary Jackson', category:'Mathematics', bio:'NASA’s first Black female engineer; specialized in aerodynamics.', status:'shadow' },
-    { id:'h9', name:'Ada E. Yonath', category:'Medicine', bio:'Nobel laureate for pioneering work on ribosome structure.', status:'shadow' },
-    { id:'h10', name:'Annie Easley', category:'Computing', bio:'NASA rocket scientist and early programmer.', status:'shadow' },
-    { id:'h11', name:'Grace Hopper', category:'Computing', bio:'Compiler inventor; COBOL pioneer; naval Rear Admiral.', status:'shadow' },
-    { id:'h12', name:'Shafi Goldwasser', category:'Mathematics', bio:'Turing Award winner; zero-knowledge proofs co-inventor.', status:'shadow' },
-    { id:'h13', name:'Alice Ball', category:'Medicine', bio:'Developed the Ball Method treatment for leprosy.', status:'shadow' },
-    { id:'h14', name:'Anita Borg', category:'Systems', bio:'Founder of Grace Hopper Celebration (GHC).', status:'shadow' },
-    { id:'h15', name:'Daphne Koller', category:'AI Ethics', bio:'Coursera co-founder; AI and healthcare leader.', status:'shadow' },
-    { id:'h16', name:'Mary Lou Jepsen', category:'Systems', bio:'Innovator in display technology and Openwater imaging.', status:'shadow' },
-    { id:'h17', name:'Ursula Burns', category:'Systems', bio:'First Black female CEO of a Fortune 500 company (Xerox).', status:'shadow' },
-    { id:'h18', name:'Susan Wojcicki', category:'Systems', bio:'YouTube CEO; pioneer in digital advertising and content.', status:'shadow' },
-    { id:'h19', name:'Marissa Mayer', category:'Computing', bio:'Early Google employee; Yahoo CEO; search and UI innovator.', status:'shadow' },
-    { id:'h20', name:'Ginni Rometty', category:'Systems', bio:'First female CEO of IBM; cloud and cognitive computing leader.', status:'shadow' },
-    { id:'h21', name:'Sheryl Sandberg', category:'Systems', bio:'Facebook COO; author of "Lean In"; digital platform leader.', status:'shadow' },
-
-    // --- MODERN ILLUMINATED (Strength of Equity) ---
-    { id:'m1', name:'Timnit Gebru', category:'AI Ethics', bio:'Black in AI co-founder; pioneer in algorithmic bias.', status:'illuminated' },
+    { id:'h8', name:'Mary Jackson', category:'Mathematics', bio:'NASA’s first Black female engineer.', status:'shadow' },
+    { id:'h9', name:'Ada E. Yonath', category:'Medicine', bio:'Nobel laureate for ribosome structure research.', status:'shadow' },
+    { id:'h10', name:'Annie Easley', category:'Computing', bio:'NASA rocket scientist and early coder.', status:'shadow' },
+    { id:'h11', name:'Grace Hopper', category:'Computing', bio:'COBOL pioneer and first compiler inventor.', status:'shadow' },
+    { id:'h12', name:'Shafi Goldwasser', category:'Mathematics', bio:'Co-inventor of zero-knowledge proofs.', status:'shadow' },
+    { id:'h13', name:'Alice Ball', category:'Medicine', bio:'Developed the first effective leprosy treatment.', status:'shadow' },
+    { id:'h14', name:'Anita Borg', category:'Systems', bio:'Founder of the Grace Hopper Celebration.', status:'shadow' },
+    { id:'h15', name:'Daphne Koller', category:'AI Ethics', bio:'Coursera co-founder; AI healthcare leader.', status:'shadow' },
+    { id:'h16', name:'Mary Lou Jepsen', category:'Systems', bio:'Display tech innovator and Openwater founder.', status:'shadow' },
+    { id:'m1', name:'Timnit Gebru', category:'AI Ethics', bio:'Co-founder of Black in AI; bias research pioneer.', status:'illuminated' },
     { id:'m2', name:'Joy Buolamwini', category:'Justice', bio:'Founder of the Algorithmic Justice League.', status:'illuminated' },
     { id:'m3', name:'Fei-Fei Li', category:'AI Ethics', bio:'ImageNet creator; Human-Centered AI pioneer.', status:'illuminated' },
-    { id:'m4', name:'Kimberly Bryant', category:'Justice', bio:'Founder of Black Girls Code; bridging the digital divide.', status:'illuminated' },
-    { id:'m5', name:'Latanya Sweeney', category:'Justice', bio:'Pioneer of data privacy research; k-anonymity model creator.', status:'illuminated' },
-    { id:'m6', name:'Elizabeth Churchill', category:'Systems', bio:'Specialist in Social Computing and HCI (Google Director).', status:'illuminated' },
-    { id:'m7', name:'Cynthia Breazeal', category:'Systems', bio:'Social robotics pioneer at MIT Media Lab.', status:'illuminated' },
-    { id:'m8', name:'Rana el Kaliouby', category:'AI Ethics', bio:'Affective computing pioneer; Emotion AI leader.', status:'illuminated' },
-    { id:'m9', name:'Rachael Rollins', category:'Justice', bio:'DA and pioneer of prosecutorial data transparency.', status:'illuminated' },
-    { id:'m10', name:'Safiya Umoja Noble', category:'Justice', bio:'Author of "Algorithms of Oppression"; algorithmic bias critic.', status:'illuminated' },
-    { id:'m11', name:'Ruha Benjamin', category:'Justice', bio:'Author of "Race After Technology"; critical data studies leader.', status:'illuminated' },
-    { id:'m12', name:'Cynthia Dwork', category:'Justice', bio:'Pioneer of differential privacy and algorithmic fairness.', status:'illuminated' },
-    { id:'m13', name:'Danah Boyd', category:'Systems', bio:'Founder of Data & Society; social media researcher.', status:'illuminated' },
-    { id:'m14', name:'Ayo Tometi', category:'Justice', bio:'Co-founder of Black Lives Matter; human rights activist.', status:'illuminated' },
-    { id:'m15', name:'Alexandria Ocasio-Cortez', category:'Justice', bio:'Congresswoman; advocate for digital rights and AI regulation.', status:'illuminated' },
-    { id:'m16', name:'Pramila Jayapal', category:'Justice', bio:'Congresswoman; advocate for tech accountability and oversight.', status:'illuminated' },
-    { id:'m17', name:'Ro Khanna', category:'Systems', bio:'Congressman; author of "The Internet Bill of Rights".', status:'illuminated' },
-    { id:'m18', name:'Stacey Abrams', category:'Justice', bio:'Advocate for voting rights and data-driven civic tech.', status:'illuminated' },
-    { id:'m19', name:'Amanda Nguyen', category:'Justice', bio:'Rise CEO; advocate for sexual assault survivors; civil rights leader.', status:'illuminated' },
-    { id:'m20', name:'LaToya Cantrell', category:'Systems', bio:'Mayor of New Orleans; leader in data-driven civic infrastructure.', status:'illuminated' },
-    { id:'m21', name:'Arlan Hamilton', category:'Systems', bio:'Founder of Backstage Capital; investing in underrepresented founders.', status:'illuminated' }
+    { id:'m4', name:'Kimberly Bryant', category:'Justice', bio:'Founder of Black Girls Code.', status:'illuminated' },
+    { id:'m5', name:'Latanya Sweeney', category:'Justice', bio:'Data privacy pioneer; k-anonymity creator.', status:'illuminated' },
+    { id:'m6', name:'Elizabeth Churchill', category:'Systems', bio:'HCI expert and Director at Google.', status:'illuminated' },
+    { id:'m7', name:'Cynthia Breazeal', category:'Systems', bio:'Social robotics pioneer at MIT.', status:'illuminated' },
+    { id:'m8', name:'Safiya Noble', category:'Justice', bio:'Author of "Algorithms of Oppression".', status:'illuminated' }
   ];
 
-  let nodes = [], links = [], simulation, svg, container;
+  let nodes = [], links = [], simulation, svg, container, zoom;
 
   async function boot() {
-    d3.select('#loading-msg').textContent = 'SYNCHRONIZING WITH BUREAU...';
     try {
       const res = await fetch(`${SERVER}/graph`, { signal: AbortSignal.timeout(4000) });
       const data = await res.json();
-      
-      const serverIds = new Set(data.nodes.map(n => n.id));
-      nodes = [...data.nodes, ...SEED.filter(s => !serverIds.has(s.id))];
-      
-      // Edge protocol: Use explicit edges, fallback to category affinity
-      links = data.edges && data.edges.length ? buildExplicitEdges(data.edges) : buildAffinityEdges(nodes);
-      
+      const sIds = new Set(data.nodes.map(n => n.id));
+      nodes = [...data.nodes, ...SEED.filter(s => !sIds.has(s.id))];
+      links = buildAffinityLinks(nodes);
       setStatus('BUREAU LIVE', 'green');
-      connectWebSocket();
+      connectWS();
     } catch(e) {
-      // Offline fallback: rich visual for judges
       nodes = [...SEED];
-      links = buildAffinityEdges(nodes);
+      links = buildAffinityLinks(nodes);
       setStatus('LOCAL ARCHIVE', 'warn');
     }
     initViz();
     document.getElementById('loading').classList.add('hidden');
   }
 
-  // Links nodes based on shared category
-  function buildAffinityEdges(ns) {
+  function buildAffinityLinks(ns) {
     let ls = [];
     ns.forEach((a, i) => ns.forEach((b, j) => {
       if(i < j && a.category === b.category) ls.push({ source: a.id, target: b.id });
@@ -279,47 +222,53 @@
     return ls;
   }
 
-  // Links nodes based on server explicit edges
-  function buildExplicitEdges(edges) {
-    let ls = [];
-    edges.forEach(e => (e.to || []).forEach(t => ls.push({ source: e.from, target: t })));
-    return ls;
-  }
-
   function initViz() {
     d3.select("#viz").selectAll("*").remove();
     const w = window.innerWidth, h = window.innerHeight;
+    const isMobile = w < 768;
+    const baseR = isMobile ? 12 : 18;
+
     svg = d3.select("#viz").attr("viewBox", [0, 0, w, h]);
     container = svg.append("g");
 
-    svg.call(d3.zoom().scaleExtent([0.3, 4]).on("zoom", (e) => container.attr("transform", e.transform)));
+    zoom = d3.zoom().scaleExtent([0.1, 5]).on("zoom", (e) => container.attr("transform", e.transform));
+    svg.call(zoom);
 
     simulation = d3.forceSimulation(nodes)
-      .force("link", d3.forceLink(links).id(d => d.id).distance(130).strength(0.8))
-      .force("charge", d3.forceManyBody().strength(-350).theta(0.9))
-      .force("center", d3.forceCenter(w/2, h/2))
-      .force("collide", d3.forceCollide().radius(d => (d.status === 'illuminated' ? 24 : 18) + 8).strength(0.6));
+      .force("link", d3.forceLink(links).id(d => d.id).distance(isMobile ? 70 : 110))
+      .force("charge", d3.forceManyBody().strength(isMobile ? -180 : -280))
+      .force("center", d3.forceCenter(w / 2, h / 2).strength(1))
+      .force("collide", d3.forceCollide().radius(d => (d.status === 'illuminated' ? baseR * 1.5 : baseR) + 10));
 
     const link = container.append("g").selectAll("line").data(links).join("line")
-      .attr("class", "link").attr("stroke", "#475569").attr("stroke-opacity", 0.12);
+      .attr("class", "link").attr("stroke", "#475569");
 
-    const nodeGroup = container.append("g").selectAll("g").data(nodes).join("g")
+    const g = container.append("g").selectAll("g").data(nodes).join("g")
       .call(d3.drag().on("start", dragStart).on("drag", dragging).on("end", dragEnd))
       .on("click", (e, d) => showDetail(d));
 
-    // Dynamic node size based on 'Shattered Ceiling' status
-    nodeGroup.append("circle").attr("r", d => d.status === 'illuminated' ? 24 : 18)
+    g.append("circle").attr("r", d => d.status === 'illuminated' ? baseR * 1.3 : baseR)
       .attr("class", d => `node-circle ${d.status || 'shadow'}`)
       .attr("fill", d => COLORS[d.category] || "#64748b")
-      .attr("stroke", d => d.status === 'illuminated' ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.12)");
+      .attr("stroke", "rgba(255,255,255,0.2)");
 
-    nodeGroup.append("text").attr("class", "node-label").attr("dy", d => (d.status === 'illuminated' ? 38 : 32)).attr("text-anchor", "middle").text(d => d.name);
+    g.append("text").attr("class", "node-label").attr("dy", d => (d.status === 'illuminated' ? baseR * 2.2 : baseR * 1.8))
+      .attr("text-anchor", "middle").style("font-size", isMobile ? "7px" : "9px").text(d => d.name);
 
     simulation.on("tick", () => {
       link.attr("x1", d => d.source.x).attr("y1", d => d.source.y).attr("x2", d => d.target.x).attr("y2", d => d.target.y);
-      nodeGroup.attr("transform", d => `translate(${d.x},${d.y})`);
+      g.attr("transform", d => `translate(${d.x},${d.y})`);
     });
-    
+
+    // --- AUTO-FIT LOGIC ---
+    setTimeout(() => {
+      const bounds = container.node().getBBox();
+      if (bounds.width === 0) return;
+      const midX = bounds.x + bounds.width / 2, midY = bounds.y + bounds.height / 2;
+      const scale = 0.8 / Math.max(bounds.width / w, bounds.height / h);
+      svg.transition().duration(1000).call(zoom.transform, d3.zoomIdentity.translate(w/2, h/2).scale(scale).translate(-midX, -midY));
+    }, 1200);
+
     document.getElementById('node-count').textContent = `${nodes.length} NODES`;
   }
 
@@ -328,8 +277,8 @@
     document.getElementById('d-name').textContent = d.name;
     document.getElementById('d-cat').textContent = d.category;
     document.getElementById('d-cat').style.background = COLORS[d.category];
-    document.getElementById('d-bio').textContent = d.bio || '—';
-    document.getElementById('d-meta').innerHTML = `<span>INDEX_ID: ${d.id.toUpperCase()}</span><span>// STATUS: ${d.status === 'illuminated' ? 'PRIMARY' : 'SECONDARY'}</span>`;
+    document.getElementById('d-bio').textContent = d.bio;
+    document.getElementById('d-meta').textContent = `INDEX_ID: ${d.id.toUpperCase()} // PADI BUREAU AUTHENTICATED`;
     el.style.display = 'block';
   }
 
@@ -337,46 +286,26 @@
   function toggleForm() { document.getElementById('add-form').classList.toggle('open'); }
 
   async function submitVoice() {
-    const name = document.getElementById('f-name').value.trim();
-    const cat = document.getElementById('f-category').value;
-    const bio = document.getElementById('f-bio').value.trim();
-    const status = document.getElementById('form-status');
-    if(!name || !bio) return status.textContent = "REQUIRED: NAME + BIO";
-
+    const name = document.getElementById('f-name').value;
+    const bio = document.getElementById('f-bio').value;
+    if(!name || !bio) return;
     try {
       await fetch(`${SERVER}/event`, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ type: 'NODE_ADDED', data: { id: `usr-${Date.now()}`, name, category: cat, bio, status: 'illuminated' }})
+        body: JSON.stringify({ type: 'NODE_ADDED', data: { id: `u-${Date.now()}`, name, category: document.getElementById('f-category').value, bio, status: 'illuminated' }})
       });
-      status.style.color = '#10b981';
-      status.textContent = "VOICE ADDED ✓";
-      document.getElementById('f-name').value = ''; document.getElementById('f-bio').value = '';
-      setTimeout(() => { toggleForm(); status.textContent = ''; status.style.color = ''; }, 1500);
-    } catch(e) { status.textContent = "ERROR: SUBMISSION FAILED"; }
+      document.getElementById('form-status').textContent = "ADDED ✓";
+      setTimeout(() => { toggleForm(); boot(); }, 1000);
+    } catch(e) { document.getElementById('form-status').textContent = "ERROR"; }
   }
 
-  function connectWebSocket() {
-    const ws = new WebSocket(WS_URL);
-    ws.onmessage = (e) => {
-      const msg = JSON.parse(e.data);
-      if (msg.type === 'UPDATE') boot(); // Reload on changes
-    };
-    ws.onclose = () => { if (serverLive) setTimeout(connectWebSocket, 5000); };
-  }
-
-  function setStatus(txt, cls) {
-    document.getElementById('status-label').textContent = txt;
-    document.getElementById('status-dot').className = `dot ${cls === 'warn' ? 'warn' : ''}`;
-  }
-
+  function connectWS() { const ws = new WebSocket(WS_URL); ws.onmessage = () => boot(); }
+  function setStatus(t, c) { document.getElementById('status-label').textContent = t; document.getElementById('status-dot').className = `dot ${c === 'warn' ? 'warn' : ''}`; }
   function dragStart(e, d) { if (!e.active) simulation.alphaTarget(0.2).restart(); d.fx = d.x; d.fy = d.y; }
   function dragging(e, d) { d.fx = e.x; d.fy = e.y; }
   function dragEnd(e, d) { if (!e.active) simulation.alphaTarget(0); d.fx = null; d.fy = null; }
-
-  // Resized handling
-  window.addEventListener('resize', () => { if (nodes.length) initViz(); });
-
+  window.addEventListener('resize', () => initViz());
   boot();
 </script>
 </body>
