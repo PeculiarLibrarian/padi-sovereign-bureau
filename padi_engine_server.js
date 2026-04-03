@@ -1,7 +1,7 @@
 // =====================================================
 // PADI SOVEREIGN BUREAU — Production Graph Server
-// Version: 14.1 (Integrated UI Routing)
-// Run: node padi_engine_server.js
+// Version: 14.2 (Production UI + API Hybrid)
+// Author: The Peculiar Librarian
 // Requires: npm install ws
 // =====================================================
 
@@ -17,7 +17,7 @@ const { URL }   = require('url');
 // CONFIGURATION
 // =====================================================
 const CONFIG = {
-  PORT:                 process.env.PORT || 10000,
+  PORT:                 process.env.PORT || 10000, 
   EVENT_LOG_PATH:       path.join(__dirname, 'event_log.ndjson'),
   SNAPSHOT_PATH:        path.join(__dirname, 'snapshot.json'),
   SNAPSHOT_INTERVAL_MS: 15000,
@@ -60,11 +60,13 @@ const Storage = {
   },
   loadEventLog() {
     if (!fs.existsSync(CONFIG.EVENT_LOG_PATH)) return [];
-    return fs.readFileSync(CONFIG.EVENT_LOG_PATH, 'utf-8')
-      .split('\n')
-      .filter(l => l.trim().length > 0)
-      .map(safeJsonParse)
-      .filter(Boolean);
+    try {
+      const content = fs.readFileSync(CONFIG.EVENT_LOG_PATH, 'utf-8');
+      return content.split('\n')
+        .filter(l => l.trim().length > 0)
+        .map(safeJsonParse)
+        .filter(Boolean);
+    } catch (e) { return []; }
   },
   loadSnapshot() {
     if (!fs.existsSync(CONFIG.SNAPSHOT_PATH)) return null;
@@ -76,7 +78,7 @@ const Storage = {
 };
 
 // =====================================================
-// STATE & REASONING
+// STATE & REASONING ENGINE
 // =====================================================
 const State = {
   nodes: new Map(),
@@ -101,11 +103,31 @@ function applyEvent(event) {
   }
 }
 
+function computeInfluence(startNodeId) {
+  if (!State.nodes.has(startNodeId)) return null;
+  const scores = new Map();
+  const queue = [{ id: startNodeId, depth: 0 }];
+
+  while (queue.length > 0) {
+    const { id, depth } = queue.shift();
+    if (depth > CONFIG.BFS_MAX_DEPTH) continue;
+    const contribution = Math.pow(CONFIG.DECAY_FACTOR, depth);
+    scores.set(id, (scores.get(id) || 0) + contribution);
+    const neighbors = State.edges.get(id) || new Set();
+    for (const neighbor of neighbors) {
+      queue.push({ id: neighbor, depth: depth + 1 });
+    }
+  }
+  return Array.from(scores.entries())
+    .map(([nodeId, score]) => ({ node: nodeId, score: Math.round(score * 1000) / 1000 }))
+    .sort((a, b) => b.score - a.score);
+}
+
 function computeAllInfluence() {
   const result = {};
   for (const nodeId of State.nodes.keys()) {
-    // Simple degree-based fallback for global influence
-    result[nodeId] = (State.edges.get(nodeId)?.size || 0) * CONFIG.DECAY_FACTOR;
+    const inf = computeInfluence(nodeId);
+    result[nodeId] = inf && inf[0] ? inf[0].score : 0;
   }
   return result;
 }
@@ -125,29 +147,41 @@ function recoverState() {
     (snapshot.edges || []).forEach(([k, v]) => State.edges.set(k, new Set(v)));
     State.lastEventIndex = snapshot.lastEventIndex;
     startIndex = snapshot.lastEventIndex + 1;
+    console.log(`[RECOVERY] Snapshot loaded at index ${State.lastEventIndex}`);
   }
 
+  let replayed = 0;
   for (let i = startIndex; i < events.length; i++) {
-    applyEvent(events[i]);
-    State.lastEventIndex = i;
+    try {
+      applyEvent(events[i]);
+      State.lastEventIndex = i;
+      replayed++;
+    } catch (e) { console.error(`[RECOVERY] Skip corrupt event at ${i}`); }
   }
-  console.log(`[RECOVERY] Replayed to index ${State.lastEventIndex}. Graph: ${State.nodes.size} nodes.`);
+  console.log(`[RECOVERY] Replayed ${replayed} events. Total Nodes: ${State.nodes.size}`);
 }
 
 function createSnapshot() {
   const nodesArr = Array.from(State.nodes.values());
   const edgesArr = Array.from(State.edges.entries()).map(([k, v]) => [k, Array.from(v)]);
-  Storage.saveSnapshot({ nodes: nodesArr, edges: edgesArr, lastEventIndex: State.lastEventIndex, timestamp: Date.now() });
+  Storage.saveSnapshot({ 
+    nodes: nodesArr, 
+    edges: edgesArr, 
+    lastEventIndex: State.lastEventIndex, 
+    timestamp: Date.now() 
+  });
+  console.log(`[SNAPSHOT] Saved at index ${State.lastEventIndex}`);
 }
 
 // =====================================================
-// BROADCAST & QUEUE
+// WEBSOCKET & EVENT QUEUE
 // =====================================================
 const wss = new WebSocket.Server({ noServer: true });
 const clients = new Set();
 
 wss.on('connection', (ws) => {
   clients.add(ws);
+  ws.send(JSON.stringify({ type: 'INIT', nodes: Array.from(State.nodes.values()) }));
   ws.on('close', () => clients.delete(ws));
 });
 
@@ -177,13 +211,12 @@ const EventQueue = {
 };
 
 // =====================================================
-// HTTP SERVER
+// HTTP SERVER (API + UI ROUTES)
 // =====================================================
 const server = http.createServer((req, res) => {
   const origin = req.headers.origin || '';
   const parsedUrl = new URL(req.url, `http://${req.headers.host}`);
   const pathName = parsedUrl.pathname;
-
   const headers = { ...corsHeaders(origin), 'Content-Type': 'application/json' };
 
   if (req.method === 'OPTIONS') { res.writeHead(204, headers); return res.end(); }
@@ -194,7 +227,7 @@ const server = http.createServer((req, res) => {
     fs.readFile(htmlPath, (err, data) => {
       if (err) {
         res.writeHead(404, headers);
-        return res.end(JSON.stringify({ error: 'UI file (index.html) not found.' }));
+        return res.end(JSON.stringify({ error: 'UI file (index.html) missing from root.' }));
       }
       res.writeHead(200, { ...headers, 'Content-Type': 'text/html' });
       res.end(data);
@@ -205,7 +238,12 @@ const server = http.createServer((req, res) => {
   // --- API: Health ---
   if (req.method === 'GET' && pathName === '/health') {
     res.writeHead(200, headers);
-    return res.end(JSON.stringify({ status: 'ok', nodes: State.nodes.size, uptime: process.uptime() }));
+    return res.end(JSON.stringify({ 
+        status: 'ok', 
+        nodes: State.nodes.size, 
+        lastEventIndex: State.lastEventIndex,
+        uptime: Math.floor(process.uptime()) 
+    }));
   }
 
   // --- API: Graph ---
@@ -213,7 +251,8 @@ const server = http.createServer((req, res) => {
     res.writeHead(200, headers);
     return res.end(JSON.stringify({
       nodes: Array.from(State.nodes.values()),
-      edges: Array.from(State.edges.entries()).map(([from, to]) => ({ from, to: Array.from(to) }))
+      edges: Array.from(State.edges.entries()).map(([from, to]) => ({ from, to: Array.from(to) })),
+      lastEventIndex: State.lastEventIndex
     }));
   }
 
@@ -226,10 +265,13 @@ const server = http.createServer((req, res) => {
   // --- API: Post Event ---
   if (req.method === 'POST' && pathName === '/event') {
     let body = '';
-    req.on('data', c => { body += c; });
+    req.on('data', c => { body += c; if (body.length > CONFIG.MAX_EVENT_SIZE_BYTES) req.destroy(); });
     req.on('end', () => {
       const event = safeJsonParse(body);
-      if (!event) { res.writeHead(400, headers); return res.end(JSON.stringify({ error: 'Invalid JSON' })); }
+      if (!event || !event.type) { 
+        res.writeHead(400, headers); 
+        return res.end(JSON.stringify({ error: 'Invalid event structure' })); 
+      }
       EventQueue.enqueue(event, (result) => {
         res.writeHead(result.success ? 200 : 500, headers);
         res.end(JSON.stringify(result));
@@ -238,6 +280,7 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // --- 404 ---
   res.writeHead(404, headers);
   res.end(JSON.stringify({ error: 'Route not found' }));
 });
@@ -246,10 +289,21 @@ server.on('upgrade', (req, socket, head) => {
   wss.handleUpgrade(req, socket, head, (ws) => wss.emit('connection', ws, req));
 });
 
+// =====================================================
+// STARTUP
+// =====================================================
 function start() {
+  console.log('[PADI] Initializing Engine v14.2...');
   recoverState();
   setInterval(createSnapshot, CONFIG.SNAPSHOT_INTERVAL_MS);
-  server.listen(CONFIG.PORT, () => console.log(`[PADI] Live on port ${CONFIG.PORT}`));
+  
+  process.on('SIGINT',  () => { createSnapshot(); process.exit(0); });
+  process.on('SIGTERM', () => { createSnapshot(); process.exit(0); });
+
+  server.listen(CONFIG.PORT, () => {
+    console.log(`[PADI] Sovereign Bureau live at: http://localhost:${CONFIG.PORT}`);
+    console.log(`[PADI] Internal Registry: ${CONFIG.EVENT_LOG_PATH}`);
+  });
 }
 
 start();
