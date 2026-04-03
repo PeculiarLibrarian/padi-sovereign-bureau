@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Living Library MVS Architecture</title>
+<style>
+  :root {
+    --color-background-primary: #ffffff;
+    --color-background-secondary: #f5f4f0;
+    --color-background-tertiary: #eeede8;
+    --color-background-info: #e6f1fb;
+    --color-background-success: #eaf3de;
+    --color-background-warning: #faeeda;
+    --color-text-primary: #1a1a18;
+    --color-text-secondary: #5f5e5a;
+    --color-text-tertiary: #888780;
+    --color-text-info: #185fa5;
+    --color-text-success: #3b6d11;
+    --color-text-warning: #854f0b;
+    --color-border-tertiary: rgba(0,0,0,0.12);
+    --color-border-secondary: rgba(0,0,0,0.22);
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    --border-radius-md: 8px;
+    --border-radius-lg: 12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-background-primary: #1c1c1a;
+      --color-background-secondary: #242422;
+      --color-background-tertiary: #2c2c2a;
+      --color-background-info: #042c53;
+      --color-background-success: #173404;
+      --color-background-warning: #412402;
+      --color-text-primary: #e8e6de;
+      --color-text-secondary: #9c9a92;
+      --color-text-tertiary: #6b6a64;
+      --color-text-info: #85b7eb;
+      --color-text-success: #97c459;
+      --color-text-warning: #ef9f27;
+      --color-border-tertiary: rgba(255,255,255,0.1);
+      --color-border-secondary: rgba(255,255,255,0.18);
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-sans);
+    background: var(--color-background-primary);
+    color: var(--color-text-primary);
+    padding: 1.5rem;
+    max-width: 780px;
+    margin: 0 auto;
+  }
+  h1 { font-size: 16px; font-weight: 500; margin-bottom: 4px; }
+  .subtitle { font-size: 13px; color: var(--color-text-secondary); margin-bottom: 1rem; }
+  .tree { font-family: var(--font-mono); font-size: 13px; line-height: 1.6; }
+  .node-row { display: flex; align-items: flex-start; gap: 0; cursor: pointer; border-radius: 4px; padding: 1px 4px; transition: background 0.1s; }
+  .node-row:hover { background: var(--color-background-secondary); }
+  .node-row.selected { background: var(--color-background-info); }
+  .indent { display: flex; flex-direction: column; }
+  .children { padding-left: 20px; border-left: 1px solid var(--color-border-tertiary); margin-left: 8px; }
+  .label { color: var(--color-text-primary); white-space: nowrap; }
+  .label.dir { font-weight: 500; }
+  .label.file { color: var(--color-text-secondary); }
+  .badge { font-size: 10px; padding: 1px 6px; border-radius: 10px; margin-left: 6px; font-family: var(--font-sans); white-space: nowrap; }
+  .badge.fix { background: var(--color-background-warning); color: var(--color-text-warning); }
+  .badge.new { background: var(--color-background-success); color: var(--color-text-success); }
+  .badge.key { background: var(--color-background-info); color: var(--color-text-info); }
+  .toggle { width: 14px; min-width: 14px; text-align: center; color: var(--color-text-tertiary); font-size: 11px; user-select: none; margin-right: 2px; margin-top: 2px; }
+  .icon { margin-right: 5px; font-size: 13px; }
+  .detail-panel {
+    background: var(--color-background-secondary);
+    border: 0.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-lg);
+    padding: 14px 16px;
+    margin-top: 1rem;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    min-height: 80px;
+    transition: all 0.15s;
+  }
+  .detail-panel h4 { font-size: 13px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 6px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .detail-panel p { color: var(--color-text-secondary); line-height: 1.5; }
+  .detail-panel code { font-family: var(--font-mono); background: var(--color-background-tertiary); padding: 1px 5px; border-radius: 3px; font-size: 12px; color: var(--color-text-primary); }
+  .legend { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 0.5px solid var(--color-border-tertiary); font-family: var(--font-sans); align-items: center; }
+  .legend-item { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--color-text-secondary); }
+</style>
+</head>
+<body>
+<h1>📦 Living Library of Access — MVS Architecture</h1>
+<p class="subtitle">Interactive repository map · Click any file or folder for notes · April 3, 2026</p>
+
+<div class="legend">
+  <span style="font-size:12px;color:var(--color-text-tertiary);">Legend:</span>
+  <span class="legend-item"><span class="badge new">new</span> Added in revision</span>
+  <span class="legend-item"><span class="badge fix">fix</span> Critical fix needed</span>
+  <span class="legend-item"><span class="badge key">key</span> Architectural anchor</span>
+</div>
+
+<div id="tree" class="tree"></div>
+<div class="detail-panel" id="detail">
+  <h4>📁 living-library-of-access</h4>
+  <p>Click any file or folder to see details, notes, and phase information.</p>
+</div>
+
+<script>
+const tree = [
+  { id:'root', label:'living-library-of-access/', type:'dir', icon:'📦', open:true, note:'Root of the MVS repository. Phase 1 target: 15 core files deployed to GitHub Pages by April 3.', children:[
+    { id:'config', label:'Configuration', type:'dir', icon:'⚙️', open:true, children:[
+      { id:'pkg', label:'package.json', type:'file', badge:'fix', note:'HTML-encoded in Padi output — <code>&&</code> rendered as <code>&amp;amp;&amp;amp;</code>. Run find-replace before using. Includes gsap, d3, react-router-dom. <code>node >=18</code> required.', phase:1 },
+      { id:'vite', label:'vite.config.ts', type:'file', badge:'fix', note:'Missing <code>base: \'/living-library-of-access/\'</code> for GitHub Pages asset paths. Add before first deploy or all assets 404.', phase:1 },
+      { id:'ts', label:'tsconfig.json', type:'file', note:'Strict mode enabled. Path aliases: @, @components, @hooks, @services, @data. References tsconfig.node.json.', phase:1 },
+      { id:'tsn', label:'tsconfig.node.json', type:'file', note:'Covers vite.config.ts and vitest.config.ts. Required for composite project references.', phase:1 },
+      { id:'vtest', label:'vitest.config.ts', type:'file', badge:'new', note:'Test runner config. jsdom environment, global test APIs, coverage via v8. Setup file at <code>src/__tests__/setup.ts</code> — must be created.', phase:1 },
+      { id:'eslint', label:'.eslintrc.cjs', type:'file', badge:'new', note:'TypeScript + React hooks linting rules. Keeps code quality consistent across contributors.', phase:2 },
+      { id:'prettier', label:'.prettierrc', type:'file', badge:'new', note:'Auto-formatting rules. Run <code>npm run format</code> before commits.', phase:2 },
+      { id:'gitignore', label:'.gitignore', type:'file', note:'Covers node_modules, dist, .env, coverage, editor files.', phase:1 },
+      { id:'license', label:'LICENSE', type:'file', note:'MIT License. Required for open-source contributor confidence.', phase:1 },
+      { id:'readme', label:'README.md', type:'file', badge:'new', note:'Production documentation. Should include: setup, deploy instructions, contribution guide link, architecture overview.', phase:1 },
+    ]},
+    { id:'public', label:'public/', type:'dir', icon:'🎨', children:[
+      { id:'html', label:'index.html', type:'file', note:'HTML template with OG meta tags. Note: <code><div id="root"></div></code> is the React mount point.', phase:1 },
+      { id:'svg', label:'library-icon.svg', type:'file', badge:'new', note:'Favicon SVG. Browsers prefer SVG favicons — no PNG conversion needed.', phase:1 },
+    ]},
+    { id:'src', label:'src/', type:'dir', icon:'💻', open:true, children:[
+      { id:'entry', label:'Entry', type:'dir', icon:'🎯', open:true, children:[
+        { id:'main', label:'main.tsx', type:'file', badge:'key', note:'2-line entry point. <code>ReactDOM.createRoot(...).render()</code> only. No logic here.', phase:1 },
+        { id:'app', label:'App.tsx', type:'file', badge:'fix', note:'Uses BrowserRouter — must change to <code>HashRouter</code> for GitHub Pages. HTML5 history routing 404s on static hosts. Also: HTML-encoded in Padi output.', phase:1 },
+        { id:'appcss', label:'App.css', type:'file', note:'Root layout styles: flex column, header/main/footer. Gold gradient on title text.', phase:1 },
+      ]},
+      { id:'services', label:'services/', type:'dir', icon:'📚', open:true, children:[
+        { id:'vs', label:'voicesService.ts', type:'file', badge:'key', note:'Abstraction layer. Phase 1: wraps static import. Phase 2: swap for <code>fetch(\'/api/voices\')</code>. Exports: fetchVoices, fetchVoiceById, searchVoices, getVoicesByYearRange.', phase:1 },
+        { id:'ve', label:'voicesEndpoint.ts', type:'file', badge:'new', note:'Stub for future API endpoint. Empty in Phase 1 — exists to document the migration path clearly.', phase:2 },
+        { id:'vstatic', label:'voicesStatic.ts', type:'file', badge:'new', note:'Phase 1 implementation — re-exports from voicesData.ts. Isolates the static data dependency.', phase:1 },
+      ]},
+      { id:'data', label:'data/', type:'dir', icon:'🗄️', children:[
+        { id:'vdata', label:'voicesData.ts', type:'file', badge:'fix', note:'Truncated in Padi output — missing ~6 voices to reach 20+. Dr. Shafi Goldwasser entry cuts off. Needs completion. Also: define equityImpact rubric before opening contributions.', phase:1 },
+      ]},
+      { id:'components', label:'components/', type:'dir', icon:'🧩', open:true, children:[
+        { id:'lib', label:'library/', type:'dir', open:true, children:[
+          { id:'lv', label:'LibraryVisualization.tsx', type:'file', badge:'key', note:'D3 container component. Uses useD3 hook — React manages lifecycle, D3 owns the SVG. NOT YET GENERATED by Padi. Critical missing file.', phase:1 },
+          { id:'ko', label:'KnowledgeOrb.tsx', type:'file', note:'Individual node component. Handles hover, click, tooltip trigger. NOT YET GENERATED. Critical missing file.', phase:1 },
+          { id:'cc', label:'ConnectionsCanvas.tsx', type:'file', badge:'new', note:'Edge/thread renderer. Warning: must run on same D3 simulation tick as KnowledgeOrb — separate render cycles cause jitter. NOT YET GENERATED.', phase:1 },
+          { id:'io', label:'InteractionOverlay.tsx', type:'file', badge:'new', note:'Hover tooltip + detail panel overlay. Sits above SVG canvas via absolute positioning. NOT YET GENERATED.', phase:2 },
+        ]},
+        { id:'curator', label:'curator/', type:'dir', children:[
+          { id:'pc', label:'PadiCurator.tsx', type:'file', badge:'key', note:'Scripted assistant — no API calls. Pre-curated responses triggered by domain events (hover, click, scroll). Renders as sidebar panel. NOT YET GENERATED. Phase 2: real AI integration.', phase:1 },
+        ]},
+        { id:'shared', label:'shared/', type:'dir', children:[
+          { id:'ls', label:'LoadingSpinner.tsx', type:'file', note:'CSS spinner using <code>--color-primary</code>. Shows while useVoices fetches data.', phase:1 },
+          { id:'eb', label:'ErrorBoundary.tsx', type:'file', badge:'new', note:'React error boundary. Catches D3 and data errors gracefully. Required for production confidence.', phase:2 },
+        ]},
+      ]},
+      { id:'hooks', label:'hooks/', type:'dir', icon:'🪝', open:true, children:[
+        { id:'ud3', label:'useD3.ts', type:'file', badge:'key', note:'D3 isolation pattern. <code>useRef + useEffect</code> — gives D3 a ref to the SVG element, React never touches D3 internals. NOT YET GENERATED. Critical missing file.', phase:1 },
+        { id:'uv', label:'useVoices.ts', type:'file', note:'Wraps voicesService with React state + loading/error handling. Consider adding SWR or React Query for caching in Phase 2. NOT YET GENERATED.', phase:1 },
+        { id:'un', label:'useNavigation.ts', type:'file', badge:'new', note:'Navigation state hook. Syncs visualization selection with router URL for deep linking.', phase:2 },
+      ]},
+      { id:'pages', label:'pages/', type:'dir', icon:'🌐', children:[
+        { id:'home', label:'HomePage.tsx', type:'file', note:'Main visualization route. Renders LibraryVisualization + PadiCurator.', phase:2 },
+        { id:'voice', label:'VoicePage.tsx', type:'file', badge:'new', note:'Single voice detail view. Route: <code>/#/voice/:id</code> (HashRouter). Enables citation-friendly deep links.', phase:2 },
+        { id:'contrib', label:'ContributePage.tsx', type:'file', badge:'new', note:'Contribution form stub. Phase 1: static instructions + GitHub issue template link. Phase 2: real form with PR automation.', phase:2 },
+        { id:'about', label:'AboutPage.tsx', type:'file', badge:'new', note:'Library philosophy page. WeCoded judges will read this — articulate the equity mission clearly.', phase:2 },
+        { id:'layout', label:'SharedLayout.tsx', type:'file', badge:'new', note:'Persistent nav header + footer wrapper around all routes.', phase:2 },
+      ]},
+      { id:'tests', label:'__tests__/', type:'dir', icon:'🧪', children:[
+        { id:'at', label:'App.test.tsx', type:'file', badge:'new', note:'Renders without crashing. Checks for title text. Baseline confidence test.', phase:2 },
+        { id:'lvt', label:'LibraryVisualization.test.tsx', type:'file', badge:'new', note:'Mock D3 entirely — test React state/events, not simulation physics.', phase:2 },
+        { id:'vst', label:'voicesService.test.ts', type:'file', badge:'new', note:'Tests fetchVoices, searchVoices, getVoicesByYearRange with mock data.', phase:2 },
+        { id:'setup', label:'setup.ts', type:'file', badge:'new', note:'Vitest setup file. Imports @testing-library/jest-dom matchers. Required by vitest.config.ts.', phase:1 },
+        { id:'td', label:'testData.ts', type:'file', badge:'new', note:'Test fixtures — 3–5 voice entries mirroring voicesData schema.', phase:1 },
+      ]},
+      { id:'styles', label:'styles/', type:'dir', icon:'🎨', children:[
+        { id:'idx', label:'index.css', type:'file', badge:'key', note:'Design system root. CSS custom properties: 10 orb colors, spacing scale, typography scale, transition tokens. WCAG contrast needs verification on orb palette.', phase:1 },
+        { id:'vars', label:'variables.css', type:'file', badge:'new', note:'Separate variables file for the D3 visualization theming — imported by LibraryVisualization.', phase:1 },
+      ]},
+      { id:'utils', label:'utils/', type:'dir', icon:'🛠️', children:[
+        { id:'d3c', label:'d3Config.ts', type:'file', badge:'key', note:'Force simulation config: charge strength, link distance, collision radius, alpha decay. Extracted from component — testable and tunable without touching React.', phase:1 },
+        { id:'cp', label:'colorPalettes.ts', type:'file', badge:'fix', note:'Named "accessible themes" — WCAG contrast unverified. Run palette against APCA or WCAG 2.1 AA before launch. Especially critical given the library\'s equity focus.', phase:1 },
+        { id:'val', label:'validation.ts', type:'file', badge:'new', note:'Voice schema validator. Used by <code>validate-new-voice.yml</code> GitHub Action. Ensures contributors can\'t break the data shape.', phase:1 },
+      ]},
+    ]},
+    { id:'github', label:'.github/', type:'dir', icon:'📝', children:[
+      { id:'wf', label:'workflows/', type:'dir', children:[
+        { id:'ci', label:'ci.yml', type:'file', badge:'new', note:'Runs on every PR: <code>npm install → tsc → vitest → eslint</code>. Blocks merge on failure.', phase:3 },
+        { id:'deploy', label:'deploy.yml', type:'file', badge:'key', note:'GitHub Pages deployment on push to main. Uses <code>peaceiris/actions-gh-pages</code>. Requires base fix in vite.config.ts first.', phase:3 },
+        { id:'vnv', label:'validate-new-voice.yml', type:'file', badge:'key', note:'PR automation: runs validation.ts schema check on any PR touching voicesData.ts. Answers the "how do voices get added" question.', phase:3 },
+      ]},
+      { id:'it', label:'issue_templates/', type:'dir', children:[
+        { id:'nv', label:'new-voice.md', type:'file', badge:'new', note:'Structured template: name, year, contributions, equityImpact, tags. Contributors file issues, maintainers convert to PRs.', phase:3 },
+      ]},
+      { id:'pr', label:'pull_request_templates/', type:'dir', children:[
+        { id:'prd', label:'default.md', type:'file', badge:'new', note:'PR checklist: schema validates, tests pass, voice data complete, no broken imports.', phase:3 },
+      ]},
+    ]},
+    { id:'docs', label:'Documentation', type:'dir', icon:'📚', children:[
+      { id:'cont', label:'CONTRIBUTING.md', type:'file', badge:'new', note:'How to add a voice via PR. Includes equityImpact rubric — critical to document before opening contributions.', phase:3 },
+      { id:'arch', label:'ARCHITECTURE.md', type:'file', badge:'new', note:'System design decisions: why useD3 hook, why service abstraction, the three-phase data evolution path.', phase:3 },
+      { id:'dep', label:'DEPLOYMENT.md', type:'file', badge:'new', note:'Step-by-step GitHub Pages deployment. Includes the HashRouter and base path notes.', phase:3 },
+    ]},
+  ]}
+];
+
+const details = {};
+function buildDetails(nodes) {
+  nodes.forEach(n => {
+    if (n.note) details[n.id] = { label: n.label, badge: n.badge, note: n.note, phase: n.phase };
+    if (n.children) buildDetails(n.children);
+  });
+}
+buildDetails(tree);
+
+let selected = null;
+const openState = {};
+
+function iconFor(node) {
+  if (node.type === 'dir') return node.icon || '📁';
+  if (node.badge === 'fix') return '⚠️';
+  if (node.badge === 'new') return '✨';
+  if (node.badge === 'key') return '🔑';
+  return '📄';
+}
+
+function badgeHtml(badge) {
+  if (!badge) return '';
+  return `<span class="badge ${badge}">${badge}</span>`;
+}
+
+function renderNode(node) {
+  const isDir = node.type === 'dir';
+  const isOpen = openState[node.id] !== false && (node.open || openState[node.id]);
+  const hasChildren = node.children && node.children.length > 0;
+
+  const div = document.createElement('div');
+  div.className = 'indent';
+
+  const row = document.createElement('div');
+  row.className = 'node-row' + (selected === node.id ? ' selected' : '');
+  row.dataset.id = node.id;
+
+  const toggle = document.createElement('span');
+  toggle.className = 'toggle';
+  toggle.textContent = hasChildren ? (isOpen ? '▾' : '▸') : ' ';
+
+  const lbl = document.createElement('span');
+  lbl.style.display = 'flex';
+  lbl.style.alignItems = 'center';
+  lbl.innerHTML = `<span class="icon">${iconFor(node)}</span><span class="label ${isDir ? 'dir' : 'file'}">${node.label}</span>${badgeHtml(node.badge)}`;
+
+  row.appendChild(toggle);
+  row.appendChild(lbl);
+  div.appendChild(row);
+
+  row.addEventListener('click', () => {
+    if (hasChildren) openState[node.id] = !isOpen;
+    selected = node.id;
+    showDetail(node.id);
+    render();
+  });
+
+  if (hasChildren && isOpen) {
+    const ch = document.createElement('div');
+    ch.className = 'children';
+    node.children.forEach(child => ch.appendChild(renderNode(child)));
+    div.appendChild(ch);
+  }
+
+  return div;
+}
+
+function render() {
+  const container = document.getElementById('tree');
+  container.innerHTML = '';
+  tree.forEach(n => container.appendChild(renderNode(n)));
+}
+
+function showDetail(id) {
+  const d = details[id];
+  const panel = document.getElementById('detail');
+  if (!d) { panel.innerHTML = `<h4>📁 ${id}</h4><p>No notes for this item.</p>`; return; }
+  const phaseLabel = d.phase ? `<span class="badge new" style="font-size:10px;">Phase ${d.phase}</span>` : '';
+  const badgeEl = d.badge ? `<span class="badge ${d.badge}">${d.badge}</span>` : '';
+  panel.innerHTML = `<h4>${badgeEl} <code>${d.label}</code>${phaseLabel}</h4><p style="margin-top:6px;">${d.note}</p>`;
+}
+
+openState['root'] = true;
+openState['config'] = true;
+openState['src'] = true;
+openState['entry'] = true;
+openState['components'] = true;
+openState['lib'] = true;
+openState['hooks'] = true;
+openState['services'] = true;
+
+render();
+</script>
+</body>
+</html>
