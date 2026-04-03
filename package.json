@@ -1,0 +1,10 @@
+{
+  "name": "padi-sovereign-bureau",
+  "version": "14.0.0",
+  "scripts": {
+    "start": "node padi_engine_server.js"
+  },
+  "dependencies": {
+    "ws": "^8.0.0"
+  }
+}
