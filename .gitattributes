@@ -1,2 +1,26 @@
-# Auto detect text files and perform LF normalization
-* text=auto
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# PADI Runtime Data — excluded from public repo
+# Graph history and snapshots stay local only.
+event_log.ndjson
+snapshot.json
+
+# Atomic write temp files
+*.tmp
+
+# Operating System files
+.DS_Store
+Thumbs.db
+
+# Environment secrets
+.env
+.env.local
