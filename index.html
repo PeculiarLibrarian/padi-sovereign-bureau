@@ -2,550 +2,98 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>PADI Sovereign Bureau: Living Library of Access</title>
+  <title>PADI Sovereign Bureau</title>
   <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
-
   <style>
-    :root {
-      --bg-deep: #020617;
-      --bg2:     #0f172a;
-      --bg3:     #1e293b;
-      --text:    #f8fafc;
-      --muted:   #94a3b8;
-      --border:  rgba(255,255,255,0.08);
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body, html {
-      background: var(--bg-deep);
-      color: var(--text);
-      font-family: 'Inter', sans-serif;
-      height: 100%; width: 100%;
-      overflow: hidden;
-      touch-action: none;
-    }
-
-    /* ── LOADING ── */
-    #loading {
-      position: fixed; inset: 0;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      gap: 12px; z-index: 100;
-      background: var(--bg-deep);
-      transition: opacity 0.5s;
-    }
-    #loading.hidden { opacity: 0; pointer-events: none; }
-    .loader-ring {
-      width: 36px; height: 36px;
-      border: 2px solid rgba(59,130,246,0.2);
-      border-top-color: #3b82f6;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    #loading p { font-family: 'JetBrains Mono'; font-size: 10px; color: #3b82f6; letter-spacing: 1px; }
-
-    /* ── HEADER ── */
-    .brand-header {
-      position: absolute; top: 0; width: 100%;
-      padding: 1.25rem 1.5rem; z-index: 20;
-      display: flex; justify-content: space-between; align-items: flex-start;
-      background: linear-gradient(to bottom, rgba(2,6,23,0.95) 60%, transparent);
-      box-sizing: border-box; pointer-events: none;
-    }
-    .padi-id { font-family: 'JetBrains Mono'; font-size: 0.6rem; color: #3b82f6; letter-spacing: 1px; }
-    h1 { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.3px; margin: 2px 0; }
-    .tagline { font-size: 0.7rem; opacity: 0.6; max-width: 340px; line-height: 1.4; }
-    .status-bar { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; pointer-events: auto; }
-    .status-pill {
-      font-family: 'JetBrains Mono'; font-size: 0.55rem; font-weight: 700;
-      display: flex; align-items: center; gap: 5px;
-      padding: 3px 8px; border-radius: 20px;
-      border: 1px solid var(--border);
-      background: var(--bg2);
-    }
-    .dot {
-      width: 6px; height: 6px; border-radius: 50%;
-      background: #10b981; box-shadow: 0 0 6px #10b981;
-    }
-    .dot.warn  { background: #f59e0b; box-shadow: 0 0 6px #f59e0b; }
-    .dot.error { background: #ef4444; box-shadow: 0 0 6px #ef4444; }
-
-    /* ── LEGEND ── */
-    .legend {
-      position: absolute; bottom: 1.5rem; left: 1.5rem;
-      z-index: 20; display: flex; flex-direction: column; gap: 5px;
-      pointer-events: none;
-    }
-    .legend-item {
-      display: flex; align-items: center; gap: 7px;
-      font-family: 'JetBrains Mono'; font-size: 9px;
-      color: var(--muted); text-transform: uppercase;
-    }
-    .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-
-    /* ── NODE TOOLTIP ── */
-    .node-detail-panel {
-      position: absolute; bottom: 1.5rem;
-      left: 50%; transform: translateX(-50%);
-      width: 90%; max-width: 360px;
-      background: rgba(15,23,42,0.98);
-      backdrop-filter: blur(24px);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 12px; padding: 1.1rem;
-      animation: slideUp 0.35s cubic-bezier(0.2,0.8,0.2,1);
-      z-index: 30; pointer-events: auto;
-      box-shadow: 0 25px 50px -10px rgba(0,0,0,0.8);
-    }
-    @keyframes slideUp {
-      from { transform: translate(-50%, 20px); opacity: 0; }
-      to   { transform: translate(-50%, 0);    opacity: 1; }
-    }
-    .cat-tag {
-      font-family: 'JetBrains Mono'; font-size: 0.55rem;
-      padding: 2px 8px; border-radius: 4px;
-      text-transform: uppercase; font-weight: 800; color: white;
-      letter-spacing: 0.5px;
-    }
-    .node-name { margin: 6px 0 4px; font-size: 1rem; font-weight: 700; }
-    .node-bio  { font-size: 0.78rem; line-height: 1.5; opacity: 0.88; }
-    .node-meta {
-      margin-top: 10px; padding-top: 8px;
-      border-top: 1px solid rgba(255,255,255,0.07);
-      font-family: 'JetBrains Mono'; font-size: 0.55rem;
-      color: #60a5fa; display: flex; gap: 12px; flex-wrap: wrap;
-    }
-    .close-btn {
-      float: right; background: none; border: none;
-      color: white; cursor: pointer; font-size: 1.2rem; opacity: 0.35;
-      pointer-events: auto;
-    }
-    .close-btn:hover { opacity: 1; }
-
-    /* ── ADD VOICE FORM ── */
-    .add-panel {
-      position: absolute; top: 85px; right: 1.5rem;
-      z-index: 20; width: 220px; pointer-events: auto;
-    }
-    .add-toggle {
-      font-family: 'JetBrains Mono'; font-size: 0.6rem;
-      background: var(--bg2); border: 1px solid var(--border);
-      color: #3b82f6; padding: 5px 12px; border-radius: 6px;
-      cursor: pointer; width: 100%; text-align: center;
-      letter-spacing: 0.5px; transition: background 0.15s;
-    }
-    .add-toggle:hover { background: var(--bg3); }
-    .add-form {
-      display: none; margin-top: 6px;
-      background: var(--bg2); border: 1px solid var(--border);
-      border-radius: 10px; padding: 12px;
-      flex-direction: column; gap: 7px;
-    }
-    .add-form.open { display: flex; }
-    .add-form input, .add-form select {
-      background: var(--bg3); border: 1px solid var(--border);
-      color: var(--text); border-radius: 5px;
-      padding: 5px 8px; font-size: 11px;
-      font-family: 'Inter', sans-serif; width: 100%;
-      outline: none;
-    }
-    .add-form input:focus, .add-form select:focus {
-      border-color: rgba(59,130,246,0.5);
-    }
-    .add-form label {
-      font-family: 'JetBrains Mono'; font-size: 9px;
-      color: var(--muted); text-transform: uppercase;
-      letter-spacing: 0.5px; margin-bottom: 1px;
-    }
-    .submit-btn {
-      background: #3b82f6; color: white; border: none;
-      border-radius: 5px; padding: 6px; font-size: 11px;
-      font-weight: 700; cursor: pointer; width: 100%;
-      font-family: 'JetBrains Mono'; letter-spacing: 0.5px;
-      transition: background 0.15s;
-    }
-    .submit-btn:hover  { background: #2563eb; }
-    .form-status {
-      font-family: 'JetBrains Mono'; font-size: 9px;
-      text-align: center; min-height: 14px;
-    }
-
-    /* SVG */
-    svg { width: 100%; height: 100%; cursor: grab; display: block; }
-    svg:active { cursor: grabbing; }
-    .link { stroke-opacity: 0.2; stroke-width: 1px; }
-    .node-circle { stroke-width: 1.5px; cursor: pointer; }
-    .node-circle.illuminated { animation: glow 4s ease-in-out infinite; }
-    @keyframes glow {
-      0%,100% { filter: drop-shadow(0 0 2px rgba(255,255,255,0.08)); }
-      50%      { filter: drop-shadow(0 0 9px rgba(255,255,255,0.4));  }
-    }
-    .node-label {
-      font-family: 'JetBrains Mono'; font-size: 8px;
-      fill: var(--muted); pointer-events: none;
-      text-transform: uppercase; font-weight: 500;
-    }
-
-    @media (min-width: 768px) {
-      .node-detail-panel {
-        left: auto; right: 1.5rem; transform: none;
-        bottom: 1.5rem; max-width: 320px;
-      }
-    }
+    :root { --bg: #020617; --text: #f8fafc; --accent: #3b82f6; }
+    body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; overflow: hidden; }
+    header { position: absolute; top: 20px; left: 20px; z-index: 10; pointer-events: none; }
+    .padi-label { font-family: 'JetBrains Mono'; font-size: 10px; color: var(--accent); }
+    svg { width: 100vw; height: 100vh; cursor: grab; }
+    .node { stroke: rgba(255,255,255,0.2); stroke-width: 1.5px; cursor: pointer; }
+    .link { stroke: #334155; stroke-opacity: 0.4; }
+    .label { font-family: 'JetBrains Mono'; font-size: 9px; fill: #94a3b8; pointer-events: none; }
+    #panel { position: absolute; bottom: 20px; right: 20px; background: rgba(15,23,42,0.9); padding: 20px; border-radius: 12px; border: 1px solid #1e293b; width: 280px; }
   </style>
 </head>
 <body>
 
-<div id="loading">
-  <div class="loader-ring"></div>
-  <p id="loading-msg">CONNECTING TO PADI ENGINE...</p>
-</div>
-
-<header class="brand-header">
-  <div>
-    <div class="padi-id">PADI SOVEREIGN BUREAU</div>
-    <h1>The Living Library of Access</h1>
-    <span class="tagline">A high-integrity knowledge graph visualizing marginalized technological contributions.</span>
-  </div>
-  <div class="status-bar">
-    <div class="status-pill" id="engine-status">
-      <div class="dot warn" id="status-dot"></div>
-      <span id="status-label">CONNECTING</span>
-    </div>
-    <div class="status-pill" id="node-count-pill">
-      <span id="node-count">0 NODES</span>
-    </div>
-  </div>
+<header>
+  <div class="padi-label">PADI SOVEREIGN BUREAU v14.2</div>
+  <h1>Living Library</h1>
 </header>
-
-<div class="add-panel" id="add-panel">
-  <button class="add-toggle" onclick="toggleForm()">+ ADD VOICE</button>
-  <div class="add-form" id="add-form">
-    <div>
-      <label>Name</label>
-      <input id="f-name" type="text" placeholder="Full name">
-    </div>
-    <div>
-      <label>Category</label>
-      <select id="f-category">
-        <option>Computing</option>
-        <option>Mathematics</option>
-        <option>Systems</option>
-        <option>AI Ethics</option>
-        <option>Justice</option>
-        <option>Medicine</option>
-      </select>
-    </div>
-    <div>
-      <label>Bio (one line)</label>
-      <input id="f-bio" type="text" placeholder="Key contribution">
-    </div>
-    <button class="submit-btn" onclick="submitVoice()">SUBMIT TO ENGINE</button>
-    <div class="form-status" id="form-status"></div>
-  </div>
-</div>
-
-<div class="legend" id="legend"></div>
 
 <svg id="viz"></svg>
 
-<div class="node-detail-panel" id="detail" style="display:none;">
-  <button class="close-btn" onclick="closeDetail()">×</button>
-  <span class="cat-tag" id="d-cat"></span>
-  <div class="node-name" id="d-name"></div>
-  <div class="node-bio"  id="d-bio"></div>
-  <div class="node-meta" id="d-meta"></div>
+<div id="panel">
+  <h3 id="d-name">Select a Node</h3>
+  <p id="d-bio" style="font-size: 13px; opacity: 0.8;"></p>
+  <div id="d-meta" style="font-family: 'JetBrains Mono'; font-size: 10px; color: var(--accent);"></div>
 </div>
 
 <script>
-// ─────────────────────────────────────────────
-// CONFIG
-// ─────────────────────────────────────────────
-const SERVER = 'https://padi-sovereign-bureau.onrender.com';
-// Dynamic WS URL ensures it works on both HTTP/HTTPS environments
-const WS_URL = SERVER.replace(/^http/, 'ws');
+  const API = window.location.origin;
+  const WS_URL = API.replace(/^http/, 'ws');
+  const COLORS = { Computing: '#a855f7', Systems: '#3b82f6', Justice: '#f59e0b', Default: '#64748b' };
 
-const CATEGORY_COLORS = {
-  'Computing':   '#a855f7',
-  'Mathematics': '#ec4899',
-  'Systems':     '#3b82f6',
-  'AI Ethics':   '#10b981',
-  'Justice':     '#f59e0b',
-  'Medicine':    '#ef4444',
-  'Meta':        '#64748b'
-};
+  let nodes = [], links = [], scores = {};
 
-// ─────────────────────────────────────────────
-// STATE
-// ─────────────────────────────────────────────
-let nodes        = [];
-let links        = [];
-let influenceMap = {};
-let serverLive   = false;
-let simulation   = null;
-let ws           = null;
-
-let svgSel, containerSel, linkSel, nodeGroupSel;
-
-// ─────────────────────────────────────────────
-// BOOT & SYNC
-// ─────────────────────────────────────────────
-async function boot() {
-  setLoading('SYNCHRONIZING ARCHIVE...');
-
-  try {
-    const [graphRes, influenceRes] = await Promise.all([
-      fetch(`${SERVER}/graph`,     { signal: AbortSignal.timeout(4000) }),
-      fetch(`${SERVER}/influence`, { signal: AbortSignal.timeout(4000) })
-    ]);
-
-    const graphData     = await graphRes.json();
-    const influenceData = await influenceRes.json();
-
-    // BUG FIX: Normalize 'name' vs 'label' for high-capacity consistency
-    nodes = (graphData.nodes || []).map(n => ({
-        ...n,
-        name: n.name || n.label || "Anonymous Node"
-    }));
-
-    influenceMap = influenceData.scores || {};
-    links        = buildLinks(nodes, graphData.edges);
-
-    serverLive = true;
-    setStatus('LIVE', 'green');
-    connectWebSocket();
-
-  } catch (err) {
-    console.warn('[PADI] Engine unreachable. Entering offline mode.', err);
-    setStatus('OFFLINE · ARCHIVE RECOVERY', 'error');
-    // Minimal fallback if server is completely down
-    nodes = [{ id:'padi-sync', name:'Sync Pending', category:'Meta', bio:'Engine is initializing.' }];
+  async function sync() {
+    const [gRes, iRes] = await Promise.all([fetch(`${API}/graph`), fetch(`${API}/influence`)]);
+    const graph = await gRes.json();
+    const inf = await iRes.json();
+    
+    nodes = graph.nodes;
+    scores = inf.scores;
     links = [];
+    graph.edges.forEach(e => e.to.forEach(t => links.push({ source: e.from, target: t })));
+    render();
   }
 
-  buildLegend();
-  initViz();
-  hideLoading();
-}
+  function render() {
+    const svg = d3.select("#viz");
+    svg.selectAll("*").remove();
+    const width = window.innerWidth, height = window.innerHeight;
 
-// ─────────────────────────────────────────────
-// DYNAMIC LINK BUILDER
-// ─────────────────────────────────────────────
-function buildLinks(nodeArr, edgeArr) {
-  const result = [];
-  const nodeIds = new Set(nodeArr.map(n => n.id));
-  
-  (edgeArr || []).forEach(e => {
-    (e.to || []).forEach(t => {
-      if (nodeIds.has(e.from) && nodeIds.has(t)) {
-        result.push({ source: e.from, target: t });
-      }
-    });
-  });
+    const g = svg.append("g");
+    svg.call(d3.zoom().on("zoom", (e) => g.attr("transform", e.transform)));
 
-  // If no formal edges exist, cluster by category (High-Capacity Meta-Graph)
-  if (result.length === 0) {
-    nodeArr.forEach((a, i) => {
-      nodeArr.forEach((b, j) => {
-        if (i < j && a.category === b.category) {
-          result.push({ source: a.id, target: b.id });
-        }
-      });
-    });
-  }
-  return result;
-}
+    const sim = d3.forceSimulation(nodes)
+      .force("link", d3.forceLink(links).id(d => d.id).distance(120))
+      .force("charge", d3.forceManyBody().strength(-200))
+      .force("center", d3.forceCenter(width / 2, height / 2));
 
-// ─────────────────────────────────────────────
-// HIGH-CAPACITY RADIUS
-// ─────────────────────────────────────────────
-function nodeRadius(d) {
-  const base  = d.status === 'shadow' ? 12 : 16;
-  const score = influenceMap[d.id] || 0;
-  const bonus = Math.min(score * 4, 15);
-  return base + bonus;
-}
+    const link = g.append("g").selectAll("line").data(links).join("line").attr("class", "link");
 
-// ─────────────────────────────────────────────
-// VISUALISATION (Tuned for 1,000+ Nodes)
-// ─────────────────────────────────────────────
-function initViz() {
-  const W = window.innerWidth;
-  const H = window.innerHeight;
-
-  d3.select('#viz').selectAll('*').remove();
-
-  svgSel = d3.select('#viz').attr('viewBox', [0, 0, W, H]);
-  containerSel = svgSel.append('g');
-
-  svgSel.call(
-    d3.zoom()
-      .scaleExtent([0.1, 5])
-      .on('zoom', e => containerSel.attr('transform', e.transform))
-  );
-
-  simulation = d3.forceSimulation(nodes)
-    .alphaDecay(0.04) // Faster stabilization
-    .force('link',      d3.forceLink(links).id(d => d.id).distance(100))
-    .force('charge',    d3.forceManyBody().strength(-150)) // Reduced for 1000+ density
-    .force('center',    d3.forceCenter(W / 2, H / 2))
-    .force('collision', d3.forceCollide().radius(d => nodeRadius(d) + 5));
-
-  linkSel = containerSel.append('g')
-    .selectAll('line')
-    .data(links)
-    .join('line')
-    .attr('class', 'link')
-    .attr('stroke', '#64748b');
-
-  nodeGroupSel = containerSel.append('g')
-    .selectAll('g')
-    .data(nodes)
-    .join('g')
-    .call(d3.drag()
-      .on('start', (e, d) => { if (!e.active) simulation.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
-      .on('drag',  (e, d) => { d.fx = e.x; d.fy = e.y; })
-      .on('end',   (e, d) => { if (!e.active) simulation.alphaTarget(0); d.fx = null; d.fy = null; })
-    )
-    .on('click', (e, d) => showDetail(d));
-
-  nodeGroupSel.append('circle')
-    .attr('class', d => `node-circle ${d.status || 'shadow'}`)
-    .attr('r',      d => nodeRadius(d))
-    .attr('fill',   d => CATEGORY_COLORS[d.category] || '#64748b')
-    .attr('stroke', 'rgba(255,255,255,0.2)');
-
-  nodeGroupSel.append('text')
-    .attr('class', 'node-label')
-    .attr('dy',    d => nodeRadius(d) + 12)
-    .attr('text-anchor', 'middle')
-    // Culling: Only show labels if total nodes < 150 to preserve performance
-    .text(d => nodes.length > 150 ? '' : (d.name.length > 14 ? d.name.substring(0, 12) + '..' : d.name));
-
-  simulation.on('tick', () => {
-    linkSel
-      .attr('x1', d => d.source.x)
-      .attr('y1', d => d.source.y)
-      .attr('x2', d => d.target.x)
-      .attr('y2', d => d.target.y);
-    nodeGroupSel.attr('transform', d => `translate(${d.x},${d.y})`);
-  });
-
-  updateNodeCount();
-}
-
-// ─────────────────────────────────────────────
-// REFRESH & WEBSOCKET
-// ─────────────────────────────────────────────
-async function refreshFromServer() {
-  try {
-    const gRes = await fetch(`${SERVER}/graph`);
-    const gData = await gRes.json();
-
-    const existingIds = new Set(nodes.map(n => n.id));
-    gData.nodes.forEach(n => { 
-        if (!existingIds.has(n.id)) {
-            nodes.push({ ...n, name: n.name || n.label }); 
-        } 
-    });
-
-    links = buildLinks(nodes, gData.edges);
-    initViz(); // Full re-render handles large batches cleaner
-  } catch (err) {
-    console.warn('[PADI] Auto-refresh failed.');
-  }
-}
-
-function connectWebSocket() {
-  if (!serverLive) return;
-  try {
-    ws = new WebSocket(WS_URL);
-    ws.onmessage = async (e) => {
-      const msg = JSON.parse(e.data);
-      if (msg.type === 'UPDATE') {
-        await refreshFromServer();
-        flashStatus();
-      }
-    };
-    ws.onclose = () => setTimeout(connectWebSocket, 5000);
-  } catch (e) { console.error("WS Error", e); }
-}
-
-// ─────────────────────────────────────────────
-// FORM SUBMISSION
-// ─────────────────────────────────────────────
-function toggleForm() { document.getElementById('add-form').classList.toggle('open'); }
-
-async function submitVoice() {
-  const name     = document.getElementById('f-name').value.trim();
-  const category = document.getElementById('f-category').value;
-  const bio      = document.getElementById('f-bio').value.trim();
-  const status   = document.getElementById('form-status');
-
-  if (!name || !bio) { status.textContent = 'MISSING DATA'; return; }
-
-  const id = `node-${Date.now()}`;
-  status.textContent = 'TRANSMITTING...';
-
-  try {
-    const res = await fetch(`${SERVER}/event`, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({
-        type: 'NODE_ADDED',
-        data: { id, name, category, bio, status: 'illuminated' }
+    const node = g.append("g").selectAll("g").data(nodes).join("g")
+      .on("click", (e, d) => {
+        document.getElementById('d-name').innerText = d.name;
+        document.getElementById('d-bio').innerText = d.bio || "No archival bio.";
+        document.getElementById('d-meta').innerText = `INFLUENCE: ${scores[d.id] || 0}`;
       })
+      .call(d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended));
+
+    node.append("circle")
+      .attr("r", d => 10 + (scores[d.id] || 0) * 2)
+      .attr("fill", d => COLORS[d.category] || COLORS.Default);
+
+    node.append("text").attr("class", "label").attr("dy", 25).attr("text-anchor", "middle")
+      .text(d => d.name);
+
+    sim.on("tick", () => {
+      link.attr("x1", d => d.source.x).attr("y1", d => d.source.y).attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+      node.attr("transform", d => `translate(${d.x},${d.y})`);
     });
-    const result = await res.json();
-    if (result.success) {
-      status.textContent = 'ACCEPTED ✓';
-      document.getElementById('f-name').value = '';
-      document.getElementById('f-bio').value  = '';
-    }
-  } catch (err) { status.textContent = 'SYNC ERROR'; }
-}
 
-// ─────────────────────────────────────────────
-// UI HELPERS
-// ─────────────────────────────────────────────
-function showDetail(d) {
-  document.getElementById('d-cat').textContent  = d.category;
-  document.getElementById('d-cat').style.backgroundColor = CATEGORY_COLORS[d.category];
-  document.getElementById('d-name').textContent = d.name;
-  document.getElementById('d-bio').textContent  = d.bio || 'Archival entry locked.';
-  document.getElementById('d-meta').innerHTML   = `<span>ID: ${d.id}</span><span>SCORE: ${(influenceMap[d.id] || 0).toFixed(3)}</span>`;
-  document.getElementById('detail').style.display = 'block';
-}
+    function dragstarted(e, d) { if (!e.active) sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; }
+    function dragged(e, d) { d.fx = e.x; d.fy = e.y; }
+    function dragended(e, d) { if (!e.active) sim.alphaTarget(0); d.fx = null; d.fy = null; }
+  }
 
-function closeDetail() { document.getElementById('detail').style.display = 'none'; }
-
-function buildLegend() {
-  const used = [...new Set(nodes.map(n => n.category))];
-  document.getElementById('legend').innerHTML = used.map(cat => `
-    <div class="legend-item">
-      <div class="legend-dot" style="background:${CATEGORY_COLORS[cat]}"></div>
-      ${cat}
-    </div>`).join('');
-}
-
-function setStatus(label, state) {
-  document.getElementById('status-label').textContent = label;
-  document.getElementById('status-dot').className = `dot ${state === 'error' ? 'error' : ''}`;
-}
-
-function updateNodeCount() { document.getElementById('node-count').textContent = `${nodes.length} NODES`; }
-function setLoading(msg) { document.getElementById('loading-msg').textContent = msg; }
-function hideLoading() { document.getElementById('loading').classList.add('hidden'); }
-function flashStatus() { 
-    const p = document.getElementById('engine-status');
-    p.style.borderColor = '#10b981';
-    setTimeout(() => p.style.borderColor = '', 1000);
-}
-
-window.addEventListener('resize', () => { if (nodes.length) initViz(); });
-
-boot();
+  const ws = new WebSocket(WS_URL);
+  ws.onmessage = () => sync();
+  sync();
 </script>
 </body>
 </html>
