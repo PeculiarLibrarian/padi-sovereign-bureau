@@ -44,7 +44,10 @@
       animation: spin 0.8s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-    #loading p { font-family: 'JetBrains Mono'; font-size: 10px; color: #3b82f6; letter-spacing: 1px; }
+    #loading p {
+      font-family: 'JetBrains Mono'; font-size: 10px;
+      color: #3b82f6; letter-spacing: 1px;
+    }
 
     /* ── HEADER ── */
     .brand-header {
@@ -54,7 +57,10 @@
       background: linear-gradient(to bottom, rgba(2,6,23,0.95) 60%, transparent);
       box-sizing: border-box; pointer-events: none;
     }
-    .padi-id { font-family: 'JetBrains Mono'; font-size: 0.6rem; color: #3b82f6; letter-spacing: 1px; }
+    .padi-id {
+      font-family: 'JetBrains Mono'; font-size: 0.6rem;
+      color: #3b82f6; letter-spacing: 1px;
+    }
     h1 { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.3px; margin: 2px 0; }
     .tagline { font-size: 0.7rem; opacity: 0.6; max-width: 340px; line-height: 1.4; }
     .status-bar { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
@@ -62,8 +68,7 @@
       font-family: 'JetBrains Mono'; font-size: 0.55rem; font-weight: 700;
       display: flex; align-items: center; gap: 5px;
       padding: 3px 8px; border-radius: 20px;
-      border: 1px solid var(--border);
-      background: var(--bg2);
+      border: 1px solid var(--border); background: var(--bg2);
     }
     .dot {
       width: 6px; height: 6px; border-radius: 50%;
@@ -85,7 +90,7 @@
     }
     .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 
-    /* ── NODE TOOLTIP ── */
+    /* ── NODE DETAIL PANEL ── */
     .node-detail-panel {
       position: absolute; bottom: 1.5rem;
       left: 50%; transform: translateX(-50%);
@@ -105,8 +110,8 @@
     .cat-tag {
       font-family: 'JetBrains Mono'; font-size: 0.55rem;
       padding: 2px 8px; border-radius: 4px;
-      text-transform: uppercase; font-weight: 800; color: white;
-      letter-spacing: 0.5px;
+      text-transform: uppercase; font-weight: 800;
+      color: white; letter-spacing: 0.5px;
     }
     .node-name { margin: 6px 0 4px; font-size: 1rem; font-weight: 700; }
     .node-bio  { font-size: 0.78rem; line-height: 1.5; opacity: 0.88; }
@@ -118,8 +123,8 @@
     }
     .close-btn {
       float: right; background: none; border: none;
-      color: white; cursor: pointer; font-size: 1.2rem; opacity: 0.35;
-      pointer-events: auto;
+      color: white; cursor: pointer; font-size: 1.2rem;
+      opacity: 0.35; pointer-events: auto;
     }
     .close-btn:hover { opacity: 1; }
 
@@ -147,8 +152,7 @@
       background: var(--bg3); border: 1px solid var(--border);
       color: var(--text); border-radius: 5px;
       padding: 5px 8px; font-size: 11px;
-      font-family: 'Inter', sans-serif; width: 100%;
-      outline: none;
+      font-family: 'Inter', sans-serif; width: 100%; outline: none;
     }
     .add-form input:focus, .add-form select:focus {
       border-color: rgba(59,130,246,0.5);
@@ -172,7 +176,7 @@
       text-align: center; min-height: 14px;
     }
 
-    /* SVG */
+    /* ── SVG ── */
     svg { width: 100%; height: 100%; cursor: grab; display: block; }
     svg:active { cursor: grabbing; }
     .link { stroke-opacity: 0.2; stroke-width: 1px; }
@@ -180,7 +184,7 @@
     .node-circle.illuminated { animation: glow 4s ease-in-out infinite; }
     @keyframes glow {
       0%,100% { filter: drop-shadow(0 0 2px rgba(255,255,255,0.08)); }
-      50%      { filter: drop-shadow(0 0 9px rgba(255,255,255,0.4));  }
+      50%      { filter: drop-shadow(0 0 9px rgba(255,255,255,0.4)); }
     }
     .node-label {
       font-family: 'JetBrains Mono'; font-size: 8px;
@@ -190,8 +194,7 @@
 
     @media (min-width: 768px) {
       .node-detail-panel {
-        left: auto; right: 1.5rem; transform: none;
-        bottom: 1.5rem; max-width: 320px;
+        left: auto; right: 1.5rem; transform: none; bottom: 1.5rem; max-width: 320px;
       }
       @keyframes slideUp {
         from { transform: translateY(15px); opacity: 0; }
@@ -218,13 +221,14 @@
       <div class="dot warn" id="status-dot"></div>
       <span id="status-label">CONNECTING</span>
     </div>
-    <div class="status-pill" id="node-count-pill">
+    <div class="status-pill">
       <span id="node-count">0 NODES</span>
     </div>
   </div>
 </header>
 
-<div class="add-panel" id="add-panel">
+<!-- FIX: Hidden by default. Only shown when server confirms live. -->
+<div class="add-panel" id="add-panel" style="display:none;">
   <button class="add-toggle" onclick="toggleForm()">+ ADD VOICE</button>
   <div class="add-form" id="add-form">
     <div>
@@ -252,7 +256,6 @@
 </div>
 
 <div class="legend" id="legend"></div>
-
 <svg id="viz"></svg>
 
 <div class="node-detail-panel" id="detail" style="display:none;">
@@ -267,9 +270,15 @@
 // ─────────────────────────────────────────────
 // CONFIG
 // ─────────────────────────────────────────────
-// Adjust to current location automatically
-const SERVER = window.location.hostname === 'localhost' ? 'http://localhost:8080' : 'https://padi-sovereign-bureau.onrender.com';
-const WS_URL = SERVER.replace('http', 'ws');
+const IS_LOCAL = window.location.hostname === 'localhost'
+              || window.location.hostname === '127.0.0.1';
+
+const SERVER = IS_LOCAL
+  ? 'http://localhost:8080'
+  : 'https://padi-sovereign-bureau.onrender.com';
+
+// FIX: https → wss, http → ws — handles both protocols correctly
+const WS_URL = SERVER.replace(/^https/, 'wss').replace(/^http/, 'ws');
 
 const CATEGORY_COLORS = {
   'Computing':   '#a855f7',
@@ -282,29 +291,29 @@ const CATEGORY_COLORS = {
 };
 
 const FALLBACK_NODES = [
-  { id:'padi-01', name:'Knowledge Protocol', category:'Meta', bio:'Semantic logic bridging diverse knowledge nodes.' },
-  { id:'h-01',    name:'Ada Lovelace', category:'Computing', bio:'Mathematician and first computer programmer (1843).' },
-  { id:'h-02',    name:'Katherine Johnson', category:'Mathematics', bio:'NASA lead for orbital mechanics and trajectory calculation.' },
-  { id:'h-03',    name:'Hedy Lamarr', category:'Systems', bio:'Inventor of frequency-hopping spread spectrum technology.' },
-  { id:'h-04',    name:'Grace Hopper', category:'Computing', bio:'Inventor of the first compiler and COBOL pioneer.' },
-  { id:'h-05',    name:'Annie Easley', category:'Computing', bio:'NASA rocket scientist and early computer programmer.' },
-  { id:'h-06',    name:'Alice Ball', category:'Medicine', bio:'Developed the Ball Method treatment for leprosy.' },
-  { id:'h-07',    name:'Gladys West', category:'Mathematics', bio:'Primary architect of the mathematical modeling for GPS.' },
-  { id:'h-08',    name:'Mary Jackson', category:'Mathematics', bio:"NASA's first Black female engineer." },
-  { id:'m-01',    name:'Timnit Gebru', category:'AI Ethics', bio:'Pioneering researcher in algorithmic bias and AI ethics.' },
-  { id:'m-02',    name:'Radia Perlman', category:'Systems', bio:'Inventor of Spanning Tree Protocol (STP).' },
-  { id:'m-03',    name:'Joy Buolamwini', category:'Justice', bio:'Founder of the Algorithmic Justice League.' },
-  { id:'m-04',    name:'Shafi Goldwasser', category:'Mathematics', bio:'Co-inventor of zero-knowledge proofs and modern crypto.' },
-  { id:'m-05',    name:'Fei-Fei Li', category:'AI Ethics', bio:'Created ImageNet; co-director of Stanford HAI.' },
-  { id:'m-06',    name:'Elizabeth Churchill', category:'Systems', bio:'Specialist in social computing and HCI (Google Director).' },
-  { id:'m-07',    name:'Kimberly Bryant', category:'Justice', bio:'Electrical engineer and founder of Black Girls Code.' },
-  { id:'m-08',    name:'Margaret Hamilton', category:'Computing', bio:'Lead Apollo software designer; coined software engineering.' },
-  { id:'m-09',    name:'Anita Borg', category:'Systems', bio:'Founder of the Institute for Women and Technology.' },
-  { id:'m-10',    name:'Latanya Sweeney', category:'Justice', bio:'Harvard Professor; pioneer of data privacy research.' },
-  { id:'m-11',    name:'Daphne Koller', category:'AI Ethics', bio:'Co-founder of Coursera; AI and healthcare expert.' },
-  { id:'m-12',    name:'Cynthia Breazeal', category:'Systems', bio:'Social robotics pioneer at MIT Media Lab.' },
-  { id:'m-13',    name:'Mary Lou Jepsen', category:'Systems', bio:'Innovator in display technology and imaging hardware.' },
-  { id:'m-14',    name:'Rana el Kaliouby', category:'AI Ethics', bio:'Affective computing pioneer; co-founder of Affectiva.' }
+  { id:'padi-01', name:'Knowledge Protocol', category:'Meta',        bio:'Semantic logic bridging diverse knowledge nodes.' },
+  { id:'h-01',    name:'Ada Lovelace',        category:'Computing',   bio:'Mathematician and first computer programmer (1843).' },
+  { id:'h-02',    name:'Katherine Johnson',   category:'Mathematics', bio:'NASA lead for orbital mechanics and trajectory calculation.' },
+  { id:'h-03',    name:'Hedy Lamarr',         category:'Systems',     bio:'Inventor of frequency-hopping spread spectrum technology.' },
+  { id:'h-04',    name:'Grace Hopper',        category:'Computing',   bio:'Inventor of the first compiler and COBOL pioneer.' },
+  { id:'h-05',    name:'Annie Easley',         category:'Computing',   bio:'NASA rocket scientist and early computer programmer.' },
+  { id:'h-06',    name:'Alice Ball',           category:'Medicine',    bio:'Developed the Ball Method treatment for leprosy.' },
+  { id:'h-07',    name:'Gladys West',          category:'Mathematics', bio:'Primary architect of the mathematical modeling for GPS.' },
+  { id:'h-08',    name:'Mary Jackson',         category:'Mathematics', bio:"NASA's first Black female engineer." },
+  { id:'m-01',    name:'Timnit Gebru',         category:'AI Ethics',   bio:'Pioneering researcher in algorithmic bias and AI ethics.' },
+  { id:'m-02',    name:'Radia Perlman',        category:'Systems',     bio:'Inventor of Spanning Tree Protocol (STP).' },
+  { id:'m-03',    name:'Joy Buolamwini',       category:'Justice',     bio:'Founder of the Algorithmic Justice League.' },
+  { id:'m-04',    name:'Shafi Goldwasser',     category:'Mathematics', bio:'Co-inventor of zero-knowledge proofs and modern crypto.' },
+  { id:'m-05',    name:'Fei-Fei Li',           category:'AI Ethics',   bio:'Created ImageNet; co-director of Stanford HAI.' },
+  { id:'m-06',    name:'Elizabeth Churchill',  category:'Systems',     bio:'Specialist in social computing and HCI (Google Director).' },
+  { id:'m-07',    name:'Kimberly Bryant',      category:'Justice',     bio:'Electrical engineer and founder of Black Girls Code.' },
+  { id:'m-08',    name:'Margaret Hamilton',    category:'Computing',   bio:'Lead Apollo software designer; coined software engineering.' },
+  { id:'m-09',    name:'Anita Borg',           category:'Systems',     bio:'Founder of the Institute for Women and Technology.' },
+  { id:'m-10',    name:'Latanya Sweeney',      category:'Justice',     bio:'Harvard Professor; pioneer of data privacy research.' },
+  { id:'m-11',    name:'Daphne Koller',        category:'AI Ethics',   bio:'Co-founder of Coursera; AI and healthcare expert.' },
+  { id:'m-12',    name:'Cynthia Breazeal',     category:'Systems',     bio:'Social robotics pioneer at MIT Media Lab.' },
+  { id:'m-13',    name:'Mary Lou Jepsen',      category:'Systems',     bio:'Innovator in display technology and imaging hardware.' },
+  { id:'m-14',    name:'Rana el Kaliouby',     category:'AI Ethics',   bio:'Affective computing pioneer; co-founder of Affectiva.' }
 ];
 
 // ─────────────────────────────────────────────
@@ -316,23 +325,28 @@ let influenceMap = {};
 let serverLive   = false;
 let simulation   = null;
 let ws           = null;
-
 let svgSel, containerSel, linkSel, nodeGroupSel;
 
 // ─────────────────────────────────────────────
-// BOOT (Unified Merge Logic)
+// BOOT
 // ─────────────────────────────────────────────
 async function boot() {
   setLoading('SYNCHRONIZING PADI NODES...');
 
-  // 1. Initialize with the Static Pioneer Archive
+  // Always start with the static archive
   nodes = FALLBACK_NODES.map(n => ({ ...n }));
 
   try {
+    // FIX: AbortSignal.timeout() not supported in Safari <16.4
+    // Use manual AbortController for broad compatibility
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 4000);
+
     const [graphRes, influenceRes] = await Promise.all([
-      fetch(`${SERVER}/graph`, { signal: AbortSignal.timeout(4000) }),
-      fetch(`${SERVER}/influence`, { signal: AbortSignal.timeout(4000) })
+      fetch(`${SERVER}/graph`,     { signal: controller.signal }),
+      fetch(`${SERVER}/influence`, { signal: controller.signal })
     ]);
+    clearTimeout(timer);
 
     if (!graphRes.ok) throw new Error('Server not reachable');
 
@@ -340,24 +354,25 @@ async function boot() {
     const influenceData = await influenceRes.json();
     influenceMap = influenceData.scores || {};
 
-    // 2. THE MERGE: Add server nodes if they don't exist in local archive
+    // Merge: add server nodes not already in local archive
     const archiveIds = new Set(nodes.map(n => n.id));
-    
     (graphData.nodes || []).forEach(sNode => {
-      if (!archiveIds.has(sNode.id)) {
-        nodes.push({ ...sNode });
-      }
+      if (!archiveIds.has(sNode.id)) nodes.push({ ...sNode });
     });
 
     links = buildLinks(nodes, graphData.edges);
     serverLive = true;
     setStatus('LIVE', 'green');
+
+    // FIX: Only show add panel when server is confirmed live
+    document.getElementById('add-panel').style.display = 'block';
     connectWebSocket();
 
-  } catch (err) {
-    console.warn("[PADI] Bureau Server Offline. Using local archive.");
+  } catch {
+    console.warn('[PADI] Server offline — running on local archive.');
     links = buildFallbackLinks(nodes);
     setStatus('OFFLINE · ARCHIVE MODE', 'error');
+    // add-panel stays hidden — no point submitting to a dead server
   }
 
   buildLegend();
@@ -369,7 +384,7 @@ async function boot() {
 // LINK BUILDERS
 // ─────────────────────────────────────────────
 function buildLinks(nodeArr, edgeArr) {
-  const result = [];
+  const result  = [];
   const nodeIds = new Set(nodeArr.map(n => n.id));
   (edgeArr || []).forEach(e => {
     (e.to || []).forEach(t => {
@@ -378,8 +393,8 @@ function buildLinks(nodeArr, edgeArr) {
       }
     });
   });
-  if (result.length === 0) return buildFallbackLinks(nodeArr);
-  return result;
+  // Fall back to category affinity if server has no edges yet
+  return result.length > 0 ? result : buildFallbackLinks(nodeArr);
 }
 
 function buildFallbackLinks(nodeArr) {
@@ -408,12 +423,14 @@ function initViz() {
   const H = window.innerHeight;
 
   d3.select('#viz').selectAll('*').remove();
-  svgSel = d3.select('#viz').attr('viewBox', [0, 0, W, H]);
+  svgSel       = d3.select('#viz').attr('viewBox', [0, 0, W, H]);
   containerSel = svgSel.append('g');
 
+  // FIX: dblclick filter prevents zoom/node-click conflict
   svgSel.call(
     d3.zoom()
       .scaleExtent([0.25, 4])
+      .filter(e => !e.button && e.type !== 'dblclick')
       .on('zoom', e => containerSel.attr('transform', e.transform))
   );
 
@@ -421,17 +438,20 @@ function initViz() {
     .force('link',      d3.forceLink(links).id(d => d.id).distance(100))
     .force('charge',    d3.forceManyBody().strength(-300))
     .force('center',    d3.forceCenter(W / 2, H / 2))
-    .force('collision', d3.forceCollide().radius(d => nodeRadius(d) + 12));
+    .force('collision', d3.forceCollide().radius(d => nodeRadius(d) + 12))
+    // FIX: Boundary force — clamps all nodes within the visible viewport
+    .force('bounds', () => {
+      nodes.forEach(d => {
+        d.x = Math.max(50, Math.min(W - 50, d.x));
+        d.y = Math.max(90, Math.min(H - 70, d.y));
+      });
+    });
 
   linkSel = containerSel.append('g')
     .selectAll('line')
     .data(links)
     .join('line')
-    .attr('class', 'link')
-    .attr('stroke', d => {
-      const src = nodes.find(n => n.id === (d.source.id || d.source));
-      return src ? (CATEGORY_COLORS[src.category] || '#64748b') : '#64748b';
-    });
+    .attr('class', 'link');
 
   nodeGroupSel = containerSel.append('g')
     .selectAll('g')
@@ -446,10 +466,10 @@ function initViz() {
     .on('click', (e, d) => showDetail(d));
 
   nodeGroupSel.append('circle')
-    .attr('class', d => `node-circle ${d.status || 'shadow'}`)
+    .attr('class',  d => `node-circle ${d.status || 'shadow'}`)
     .attr('r',      d => nodeRadius(d))
     .attr('fill',   d => CATEGORY_COLORS[d.category] || '#64748b')
-    .attr('stroke', d => (d.status === 'illuminated') ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.15)');
+    .attr('stroke', d => d.status === 'illuminated' ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.15)');
 
   nodeGroupSel.append('text')
     .attr('class', 'node-label')
@@ -457,34 +477,61 @@ function initViz() {
     .attr('text-anchor', 'middle')
     .text(d => d.name.length > 14 ? d.name.substring(0, 12) + '..' : d.name);
 
+  // Tick: resolve positions + set link stroke from resolved source object
   simulation.on('tick', () => {
     linkSel
       .attr('x1', d => d.source.x)
       .attr('y1', d => d.source.y)
       .attr('x2', d => d.target.x)
-      .attr('y2', d => d.target.y);
+      .attr('y2', d => d.target.y)
+      // Set stroke here — source is now a resolved object, not a string
+      .attr('stroke', d => CATEGORY_COLORS[d.source.category] || '#64748b');
+
     nodeGroupSel.attr('transform', d => `translate(${d.x},${d.y})`);
   });
 
   updateNodeCount();
 }
 
+// ─────────────────────────────────────────────
+// INCREMENTAL REFRESH (preserves zoom + positions)
+// ─────────────────────────────────────────────
 async function refreshFromServer() {
   try {
-    const [gRes, iRes] = await Promise.all([fetch(`${SERVER}/graph`), fetch(`${SERVER}/influence`)]);
+    const [gRes, iRes] = await Promise.all([
+      fetch(`${SERVER}/graph`),
+      fetch(`${SERVER}/influence`)
+    ]);
     const gData = await gRes.json();
     const iData = await iRes.json();
     influenceMap = iData.scores || {};
 
     const currentIds = new Set(nodes.map(n => n.id));
-    gData.nodes.forEach(n => { if (!currentIds.has(n.id)) nodes.push({ ...n }); });
+    let newNodesAdded = false;
 
-    links = buildLinks(nodes, gData.edges);
-    initViz();
+    gData.nodes.forEach(n => {
+      if (!currentIds.has(n.id)) {
+        nodes.push({ ...n });
+        newNodesAdded = true;
+      }
+    });
+
+    if (newNodesAdded) {
+      // Full re-render only when new nodes arrive
+      links = buildLinks(nodes, gData.edges);
+      initViz();
+    }
+
     flashStatus();
-  } catch (err) { console.warn('Sync failed:', err); }
+    updateNodeCount();
+  } catch (err) {
+    console.warn('[PADI] Refresh failed:', err.message);
+  }
 }
 
+// ─────────────────────────────────────────────
+// WEBSOCKET
+// ─────────────────────────────────────────────
 function connectWebSocket() {
   try {
     ws = new WebSocket(WS_URL);
@@ -492,77 +539,130 @@ function connectWebSocket() {
       const msg = JSON.parse(e.data);
       if (msg.type === 'UPDATE') await refreshFromServer();
     };
+    ws.onerror = () => {};
     ws.onclose = () => { if (serverLive) setTimeout(connectWebSocket, 5000); };
-  } catch (e) {}
+  } catch { /* WebSocket unavailable */ }
 }
 
-function toggleForm() { document.getElementById('add-form').classList.toggle('open'); }
+// ─────────────────────────────────────────────
+// ADD VOICE
+// ─────────────────────────────────────────────
+function toggleForm() {
+  document.getElementById('add-form').classList.toggle('open');
+}
 
 async function submitVoice() {
-  const name = document.getElementById('f-name').value.trim();
+  const name     = document.getElementById('f-name').value.trim();
   const category = document.getElementById('f-category').value;
-  const bio = document.getElementById('f-bio').value.trim();
+  const bio      = document.getElementById('f-bio').value.trim();
   const statusEl = document.getElementById('form-status');
 
-  if (!name || !bio) { statusEl.style.color = '#ef4444'; statusEl.textContent = 'NAME + BIO REQUIRED'; return; }
-  const id = name.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now();
+  if (!name || !bio) {
+    statusEl.style.color = '#ef4444';
+    statusEl.textContent = 'NAME + BIO REQUIRED';
+    return;
+  }
 
-  statusEl.style.color = '#94a3b8'; statusEl.textContent = 'TRANSMITTING...';
+  // FIX: Strip special characters from ID to prevent malformed identifiers
+  const safeSlug = name.toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '');
+  const id = `${safeSlug}-${Date.now()}`;
+
+  statusEl.style.color = '#94a3b8';
+  statusEl.textContent = 'TRANSMITTING...';
 
   try {
     const res = await fetch(`${SERVER}/event`, {
-      method: 'POST',
+      method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type: 'NODE_ADDED', data: { id, name, category, bio, status: 'illuminated' } })
+      body:    JSON.stringify({
+        type: 'NODE_ADDED',
+        data: { id, name, category, bio, status: 'illuminated' }
+      })
     });
     const result = await res.json();
+
     if (result.success) {
-      statusEl.style.color = '#10b981'; statusEl.textContent = 'VOICE ADDED ✓';
-      document.getElementById('f-name').value = ''; document.getElementById('f-bio').value = '';
+      statusEl.style.color = '#10b981';
+      statusEl.textContent = 'VOICE ADDED ✓';
+      document.getElementById('f-name').value = '';
+      document.getElementById('f-bio').value  = '';
+      setTimeout(() => { statusEl.textContent = ''; }, 3000);
+    } else {
+      throw new Error(result.error || 'Unknown error');
     }
-  } catch (err) { statusEl.style.color = '#ef4444'; statusEl.textContent = 'ERROR: SERVER DOWN'; }
+  } catch (err) {
+    statusEl.style.color = '#ef4444';
+    statusEl.textContent = 'ERROR: ' + (err.message || 'SERVER DOWN');
+  }
 }
 
+// ─────────────────────────────────────────────
+// DETAIL PANEL
+// ─────────────────────────────────────────────
 function showDetail(d) {
   const score = influenceMap[d.id];
-  document.getElementById('d-cat').textContent = d.category;
-  document.getElementById('d-cat').style.background = CATEGORY_COLORS[d.category] || '#64748b';
-  document.getElementById('d-name').textContent = d.name;
-  document.getElementById('d-bio').textContent = d.bio || '—';
-  document.getElementById('d-meta').innerHTML = 
+  document.getElementById('d-cat').textContent       = d.category;
+  document.getElementById('d-cat').style.background  = CATEGORY_COLORS[d.category] || '#64748b';
+  document.getElementById('d-name').textContent      = d.name;
+  document.getElementById('d-bio').textContent       = d.bio || '—';
+  document.getElementById('d-meta').innerHTML =
     `<span>ID: ${d.id}</span>` +
-    (score ? `<span>INFLUENCE: ${score.toFixed(3)}</span>` : '') +
-    (serverLive ? '<span style="color:#10b981">● LIVE</span>' : '<span style="color:#f59e0b">● CACHED</span>');
+    (score != null ? `<span>INFLUENCE: ${score.toFixed(3)}</span>` : '') +
+    (serverLive
+      ? '<span style="color:#10b981">● LIVE</span>'
+      : '<span style="color:#f59e0b">● CACHED</span>');
   document.getElementById('detail').style.display = 'block';
 }
 
-function closeDetail() { document.getElementById('detail').style.display = 'none'; }
+function closeDetail() {
+  document.getElementById('detail').style.display = 'none';
+}
 
+// ─────────────────────────────────────────────
+// LEGEND
+// ─────────────────────────────────────────────
 function buildLegend() {
   const cats = [...new Set(nodes.map(n => n.category))];
   document.getElementById('legend').innerHTML = cats.map(c => `
-    <div class="legend-item"><div class="legend-dot" style="background:${CATEGORY_COLORS[c]}"></div>${c}</div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:${CATEGORY_COLORS[c] || '#64748b'}"></div>
+      ${c}
+    </div>
   `).join('');
 }
 
-function setLoading(msg) { document.getElementById('loading-msg').textContent = msg; document.getElementById('loading').classList.remove('hidden'); }
-function hideLoading() { document.getElementById('loading').classList.add('hidden'); }
+// ─────────────────────────────────────────────
+// UI HELPERS
+// ─────────────────────────────────────────────
+function setLoading(msg) {
+  document.getElementById('loading-msg').textContent = msg;
+  document.getElementById('loading').classList.remove('hidden');
+}
+
+function hideLoading() {
+  document.getElementById('loading').classList.add('hidden');
+}
 
 function setStatus(label, state) {
   document.getElementById('status-label').textContent = label;
   const dot = document.getElementById('status-dot');
-  dot.className = 'dot ' + (state === 'error' ? 'error' : (state === 'green' ? '' : 'warn'));
+  dot.className = 'dot' + (state === 'error' ? ' error' : state === 'green' ? '' : ' warn');
 }
 
 function flashStatus() {
   const pill = document.getElementById('engine-status');
   pill.style.borderColor = '#10b981';
-  setTimeout(() => pill.style.borderColor = '', 800);
+  setTimeout(() => { pill.style.borderColor = ''; }, 800);
 }
 
-function updateNodeCount() { document.getElementById('node-count').textContent = `${nodes.length} NODES`; }
+function updateNodeCount() {
+  document.getElementById('node-count').textContent = `${nodes.length} NODES`;
+}
 
 window.addEventListener('resize', () => { if (nodes.length) initViz(); });
+
 boot();
 </script>
 </body>
