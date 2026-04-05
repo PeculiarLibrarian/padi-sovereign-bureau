@@ -1,6 +1,6 @@
 // =====================================================
 // PADI SOVEREIGN BUREAU — Production Graph Server
-// Version: 14.1 (Static Routing Update)
+// Version: 14.2 FINAL
 // Run: node padi_engine_server.js
 // Requires: npm install ws
 // =====================================================
@@ -101,7 +101,7 @@ function validateEvent(event) {
     return (
       typeof event.data.from === 'string' &&
       typeof event.data.to   === 'string' &&
-      event.data.from !== event.data.to 
+      event.data.from !== event.data.to
     );
   }
   return false;
@@ -142,8 +142,8 @@ function applyEvent(event) {
 function computeInfluence(startNodeId) {
   if (!State.nodes.has(startNodeId)) return null;
 
-  const scores  = new Map();
-  const queue   = [{ id: startNodeId, depth: 0 }];
+  const scores = new Map();
+  const queue  = [{ id: startNodeId, depth: 0 }];
 
   while (queue.length > 0) {
     const { id, depth } = queue.shift();
@@ -176,7 +176,7 @@ function computeAllInfluence() {
 }
 
 // =====================================================
-// RECOVERY & SNAPSHOT
+// RECOVERY
 // =====================================================
 function recoverState() {
   const snapshot = Storage.loadSnapshot();
@@ -187,43 +187,58 @@ function recoverState() {
     State.nodes.clear();
     State.edges.clear();
     (snapshot.nodes || []).forEach(n => State.nodes.set(n.id, n));
-    (snapshot.edges || []).forEach(([k, v]) => { State.edges.set(k, new Set(v)); });
+    (snapshot.edges || []).forEach(([k, v]) => {
+      State.edges.set(k, new Set(v));
+    });
     State.lastEventIndex = snapshot.lastEventIndex;
     startIndex           = snapshot.lastEventIndex + 1;
+    console.log(`[RECOVERY] Snapshot loaded at index ${snapshot.lastEventIndex}`);
   }
 
+  let replayed = 0;
   for (let i = startIndex; i < events.length; i++) {
     try {
       applyEvent(events[i]);
       State.lastEventIndex = i;
+      replayed++;
     } catch (err) {
-      console.error(`[RECOVERY] Error at index ${i}:`, err.message);
+      console.error(`[RECOVERY] Skipping corrupt event at index ${i}:`, err.message);
     }
   }
-  console.log(`[RECOVERY] Active Graph: ${State.nodes.size} nodes.`);
-}
 
-function createSnapshot() {
-  const nodesArr = Array.from(State.nodes.values());
-  const edgesArr = Array.from(State.edges.entries()).map(([k, v]) => [k, Array.from(v)]);
-  Storage.saveSnapshot({
-    nodes: nodesArr,
-    edges: edgesArr,
-    lastEventIndex: State.lastEventIndex,
-    timestamp: Date.now()
-  });
+  console.log(`[RECOVERY] Replayed ${replayed} events. Graph: ${State.nodes.size} nodes, ${State.edges.size} edges.`);
 }
 
 // =====================================================
-// EVENT QUEUE
+// SNAPSHOT
+// =====================================================
+function createSnapshot() {
+  const nodesArr = Array.from(State.nodes.values());
+  const edgesArr = Array.from(State.edges.entries())
+    .map(([k, v]) => [k, Array.from(v)]);
+
+  Storage.saveSnapshot({
+    nodes:          nodesArr,
+    edges:          edgesArr,
+    lastEventIndex: State.lastEventIndex,
+    timestamp:      Date.now()
+  });
+
+  console.log(`[SNAPSHOT] Saved at index ${State.lastEventIndex}`);
+}
+
+// =====================================================
+// EVENT QUEUE  (serialized to prevent index drift)
 // =====================================================
 const EventQueue = {
   _processing: false,
   _queue:      [],
+
   enqueue(event, callback) {
     this._queue.push({ event, callback });
     this._drain();
   },
+
   _drain() {
     if (this._processing || this._queue.length === 0) return;
     this._processing = true;
@@ -253,6 +268,11 @@ wss.on('connection', (ws) => {
   clients.add(ws);
   ws.send(JSON.stringify({ type: 'INIT', graph: graphPayload() }));
   ws.on('close', () => clients.delete(ws));
+  // FIX: error handler prevents unhandled exception crashing the process
+  ws.on('error', (err) => {
+    console.error('[WS] Client error:', err.message);
+    clients.delete(ws);
+  });
 });
 
 function broadcast(message) {
@@ -274,85 +294,143 @@ function graphPayload() {
 }
 
 // =====================================================
-// HTTP SERVER (Updated for Static Routing)
+// HTTP SERVER
 // =====================================================
 const server = http.createServer((req, res) => {
-  const origin = req.headers.origin || '';
-  const headers = {
-    ...corsHeaders(origin),
-    'Content-Type': 'application/json'
-  };
+  const origin  = req.headers.origin || '';
+  const headers = { ...corsHeaders(origin), 'Content-Type': 'application/json' };
 
   if (req.method === 'OPTIONS') {
     res.writeHead(204, headers);
     return res.end();
   }
 
-  // --- SERVE STATIC INDEX.HTML ---
+  // --- Serve index.html ---
   if (req.method === 'GET' && (req.url === '/' || req.url === '/index.html')) {
     const indexPath = path.join(__dirname, 'index.html');
     fs.readFile(indexPath, (err, data) => {
       if (err) {
         res.writeHead(404, headers);
-        return res.end(JSON.stringify({ error: 'index.html not found on server' }));
+        return res.end(JSON.stringify({ error: 'index.html not found' }));
       }
-      res.writeHead(200, { ...headers, 'Content-Type': 'text/html' });
+      res.writeHead(200, { ...corsHeaders(origin), 'Content-Type': 'text/html' });
       res.end(data);
     });
     return;
   }
 
-  // --- API ENDPOINTS ---
+  // --- GET /health ---
   if (req.method === 'GET' && req.url === '/health') {
     res.writeHead(200, headers);
-    return res.end(JSON.stringify({ status: 'ok', nodes: State.nodes.size, uptime: Math.floor(process.uptime()) }));
+    return res.end(JSON.stringify({
+      status:         'ok',
+      nodes:          State.nodes.size,
+      edges:          State.edges.size,
+      lastEventIndex: State.lastEventIndex,
+      uptime:         Math.floor(process.uptime()),
+      timestamp:      Date.now()
+    }));
   }
 
+  // --- GET /graph ---
   if (req.method === 'GET' && req.url === '/graph') {
     res.writeHead(200, headers);
     return res.end(JSON.stringify(graphPayload()));
   }
 
+  // --- GET /influence (all nodes) ---
   if (req.method === 'GET' && req.url === '/influence') {
     res.writeHead(200, headers);
     return res.end(JSON.stringify({ scores: computeAllInfluence() }));
   }
 
+  // --- GET /influence/:nodeId ---
+  // FIX: Restored — dropped in v14.1, documented in README and used by frontend
+  if (req.method === 'GET' && req.url.startsWith('/influence/')) {
+    const nodeId = decodeURIComponent(req.url.slice('/influence/'.length));
+    if (!nodeId) {
+      res.writeHead(400, headers);
+      return res.end(JSON.stringify({ error: 'Missing nodeId' }));
+    }
+    const result = computeInfluence(nodeId);
+    if (result === null) {
+      res.writeHead(404, headers);
+      return res.end(JSON.stringify({ error: `Node '${nodeId}' not found` }));
+    }
+    res.writeHead(200, headers);
+    return res.end(JSON.stringify({ nodeId, influence: result }));
+  }
+
+  // --- POST /event ---
   if (req.method === 'POST' && req.url === '/event') {
     let body = '';
-    req.on('data', chunk => { body += chunk; });
+
+    req.on('data', chunk => {
+      body += chunk;
+      // FIX: Body size guard restored — was missing in v14.1
+      if (body.length > CONFIG.MAX_EVENT_SIZE_BYTES) {
+        req.destroy(new Error('Payload too large'));
+      }
+    });
+
     req.on('end', () => {
       const event = safeJsonParse(body);
       if (!validateEvent(event)) {
         res.writeHead(400, headers);
-        return res.end(JSON.stringify({ success: false, error: 'Invalid event structure' }));
+        return res.end(JSON.stringify({
+          success: false,
+          error:   'Invalid event. Required: { type: "NODE_ADDED"|"EDGE_ADDED", data: { id } | { from, to } }'
+        }));
       }
       EventQueue.enqueue(event, (result) => {
         res.writeHead(result.success ? 200 : 500, headers);
         res.end(JSON.stringify(result));
       });
     });
+
+    req.on('error', (err) => {
+      res.writeHead(400, headers);
+      res.end(JSON.stringify({ success: false, error: err.message }));
+    });
+
     return;
   }
 
+  // --- 404 ---
   res.writeHead(404, headers);
   res.end(JSON.stringify({ error: 'Not found' }));
 });
 
 server.on('upgrade', (req, socket, head) => {
-  wss.handleUpgrade(req, socket, head, (ws) => { wss.emit('connection', ws, req); });
+  wss.handleUpgrade(req, socket, head, (ws) => {
+    wss.emit('connection', ws, req);
+  });
 });
 
 // =====================================================
 // STARTUP
 // =====================================================
 function start() {
+  console.log('[PADI] Starting engine...');
   recoverState();
+
   setInterval(createSnapshot, CONFIG.SNAPSHOT_INTERVAL_MS);
-  process.on('SIGINT', () => { createSnapshot(); process.exit(0); });
+
+  // FIX: SIGTERM added — Render sends SIGTERM for graceful shutdown,
+  // not SIGINT. Without this, final snapshot never saves on redeploy.
+  process.on('SIGINT',  () => { createSnapshot(); process.exit(0); });
+  process.on('SIGTERM', () => { createSnapshot(); process.exit(0); });
 
   server.listen(CONFIG.PORT, () => {
     console.log(`[PADI] Engine live on port ${CONFIG.PORT}`);
+    console.log('[PADI] Endpoints:');
+    console.log('       GET  /');
+    console.log('       GET  /health');
+    console.log('       GET  /graph');
+    console.log('       GET  /influence');
+    console.log('       GET  /influence/:nodeId');
+    console.log('       POST /event');
+    console.log('       WS   ws://localhost:' + CONFIG.PORT);
   });
 }
 
