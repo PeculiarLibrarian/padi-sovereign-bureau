@@ -3,7 +3,7 @@
 > *A Deterministic Substrate for Illuminating Marginalized Technological Voices.*
 
 [![WeCoded 2026](https://img.shields.io/badge/DEV-WeCoded%202026-a855f7?style=flat-square)](https://dev.to/challenges/wecoded-2026)
-[![License: MIT](https://img.shields.io/badge/License-MIT-3b82f6?style=flat-square)](LICENSE)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-3b82f6?style=flat-square)](LICENSE)
 [![Node.js](https://img.shields.io/badge/Node.js-v18%2B-10b981?style=flat-square)](https://nodejs.org)
 [![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.18894084-ec4899?style=flat-square)](https://doi.org/10.5281/zenodo.18894084)
 
@@ -31,7 +31,7 @@ The Living Library of Access addresses this by:
 
 ---
 
-## 🛡️ Architecture (v14.0 FINAL)
+## 🛡️ Architecture (v14.2 FINAL)
 
 This repository implements a **Hardened Monolith** design, prioritizing data sovereignty and auditability over transient cloud dependencies.
 
@@ -49,8 +49,8 @@ Contributor → POST /event → Sovereign Engine → NDJSON Log
 
 | File | Role |
 |---|---|
+| `index.html` | Liaison UI — D3 force graph, live-synced via WebSocket, static fallback built in |
 | `padi_engine_server.js` | Sovereign Engine — Node.js event-sourced graph server |
-| `living_library_connected.html` | Liaison UI — D3 force graph, live-synced via WebSocket |
 | `living_library_mvs_architecture.html` | Interactive repository map with per-file annotations |
 | `padi_engine_visualizer.html` | Engine layer diagram — click any component for detail |
 
@@ -62,9 +62,13 @@ Contributor → POST /event → Sovereign Engine → NDJSON Log
 
 **Event Queue** — all writes are serialized through a drain loop, preventing `lastEventIndex` drift under concurrent submissions.
 
-**Atomic Snapshots** — state is written to a `.tmp` file then renamed, ensuring no partial writes survive a power loss.
+**Atomic Snapshots** — state is written to a `.tmp` file then renamed, ensuring no partial writes survive a power loss. Snapshots trigger on both `SIGINT` and `SIGTERM` — covering local ctrl+c and cloud platform restarts.
 
-**Graceful Fallback** — the Liaison UI detects server availability on load. If the engine is offline, it renders the full static graph from embedded data. No blank screen.
+**Boundary Force** — a custom D3 force clamps all nodes within the visible viewport on every simulation tick. No node escapes off-screen regardless of repulsion strength.
+
+**Graceful Fallback** — the Liaison UI detects server availability on load using a cross-browser `AbortController` timeout (Safari-compatible). If the engine is offline, it renders the full static graph from the embedded archive of 23 founding voices. No blank screen.
+
+**Incremental WebSocket Updates** — on receiving a live `UPDATE` event, the frontend only triggers a full re-render if new nodes have actually been added, preserving zoom state and node positions during routine updates.
 
 ---
 
@@ -85,14 +89,14 @@ npm install ws
 node padi_engine_server.js
 ```
 
-The engine starts on `http://localhost:8080`.
+The engine starts on `http://localhost:8080` and serves `index.html` at `/`.
 
 ### Open the Liaison UI
 
-Double-click `living_library_connected.html` — or open it in any browser.
+Open `index.html` directly in any browser, or navigate to `http://localhost:8080` after starting the engine.
 
-- **Server running** → fetches live graph, sizes nodes by influence score, enables the `+ ADD VOICE` form, connects WebSocket for live updates
-- **Server offline** → renders full static graph with all 23 founding voices
+- **Server running** → fetches live graph, sizes nodes by BFS influence score, enables the `+ ADD VOICE` form, connects WebSocket for live updates
+- **Server offline** → renders full static graph with all 23 founding voices, no blank screen
 
 ### API Endpoints
 
@@ -106,7 +110,7 @@ curl http://localhost:8080/graph
 # All influence scores
 curl http://localhost:8080/influence
 
-# Influence from a specific node
+# Influence traversal from a specific node
 curl http://localhost:8080/influence/h-01
 
 # Add a new voice
@@ -118,8 +122,8 @@ curl -X POST http://localhost:8080/event \
 ### Environment Variables
 
 ```bash
-PORT=8080                          # Default server port
-ALLOWED_ORIGINS=https://yourdomain.github.io  # CORS allowlist (default: *)
+PORT=8080                                        # Default server port
+ALLOWED_ORIGINS=https://yourdomain.github.io     # CORS allowlist (default: *)
 ```
 
 ---
@@ -134,10 +138,30 @@ const ws = new WebSocket('ws://localhost:8080');
 ws.onmessage = e => {
   const msg = JSON.parse(e.data);
 
-  if (msg.type === 'INIT')   renderGraph(msg.graph);   // full state on connect
-  if (msg.type === 'UPDATE') addNode(msg.event);        // incremental on new event
+  if (msg.type === 'INIT')   renderGraph(msg.graph);  // full state on connect
+  if (msg.type === 'UPDATE') refreshGraph(msg.event); // incremental on new event
 };
 ```
+
+---
+
+## 🚢 Deployment
+
+### GitHub Pages (static, no server)
+
+Enable GitHub Pages on the `main` branch root. The `index.html` file runs in full offline mode — all 23 founding voices render from the embedded archive. The `+ ADD VOICE` form is hidden automatically when no server is detected.
+
+### Render / Railway / Fly.io (full server mode)
+
+Deploy `padi_engine_server.js` as a Node.js web service. Set the `ALLOWED_ORIGINS` environment variable to your frontend domain. The server handles WebSocket upgrades, serves `index.html` at `/`, and exposes all API endpoints.
+
+```bash
+# Set on your cloud platform dashboard
+ALLOWED_ORIGINS=https://peculiarlibrarian.github.io
+PORT=8080
+```
+
+> **Note:** Free-tier Render instances spin down after inactivity. Expect a ~30 second cold start on first connection. The frontend handles this gracefully by falling back to static mode during the timeout.
 
 ---
 
@@ -151,7 +175,7 @@ This project is an implementation of the **Practice-Area Depth Index (PADI)** �
 |---|---|
 | Architect | Samuel Muriithi Gitandu (The Peculiar Librarian) |
 | Bureau Node | Nairobi-01 (Node N-1) |
-| Standard | PADI Technical Standard v14.0 |
+| Standard | PADI Technical Standard v14.2 |
 | License | Apache 2.0 |
 
 ---
@@ -163,7 +187,7 @@ The Living Library is designed to grow. The current architecture supports three 
 | Phase | Status | Description |
 |---|---|---|
 | 1 — Static Foundation | ✅ Complete | 23 founding voices, D3 visualization, PADI engine |
-| 2 — Live Contributions | ✅ Complete | WebSocket sync, `POST /event` API, influence scoring |
+| 2 — Live Contributions | ✅ Complete | WebSocket sync, `POST /event` API, BFS influence scoring |
 | 3 — Web Submission UI | 🔄 Next | `/contribute` form, PR automation, voice schema validation |
 | 4 — Headless CMS | 📋 Planned | Contentful/DatoCMS integration, webhook-triggered rebuilds |
 | 5 — Sovereign Hosting | 📋 Planned | Vercel/Netlify migration, SSR, curator auth |
@@ -175,7 +199,8 @@ The Living Library is designed to grow. The current architecture supports three 
 Want to add a voice to the library?
 
 1. Fork the repository
-2. Add your voice entry to `living_library_connected.html` under `FALLBACK_NODES` following the schema:
+2. Add your voice entry to `index.html` under `FALLBACK_NODES` following the schema:
+
 ```json
 {
   "id": "unique-id",
@@ -185,6 +210,7 @@ Want to add a voice to the library?
   "status": "illuminated"
 }
 ```
+
 3. Open a Pull Request with the title: `New Voice: [Full Name]`
 
 *Equity impact rubric and full contribution guidelines coming in Phase 3.*
